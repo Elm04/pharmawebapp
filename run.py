@@ -1,6 +1,10 @@
 from pharmaweb import mainapp
 
+# Crée l'application en mode production
 app = mainapp()
 
-if __name__ =="__main__":
-    app.run(debug=True, host="0.0.0.0")
+if __name__ == "__main__":
+    # Pour le développement local seulement
+    from config import Config
+    app = mainapp(Config)
+    app.run()

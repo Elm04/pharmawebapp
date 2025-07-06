@@ -10,7 +10,10 @@ from flask_wtf.csrf import CSRFProtect
 def mainapp(config_class=Config):
     """Factory d'application Flask"""
     app = Flask(__name__)
-    app.config.from_object(config_class)
+    
+    if config_class:
+        app.config.from_object(config_class)
+        
     app.jinja_env.filters['format_currency'] = format_currency
     
     # Initialisation des extensions
@@ -35,6 +38,11 @@ def mainapp(config_class=Config):
     # Importation retardée des blueprints
     from pharmaweb.auth import auth
     from pharmaweb.views import views
+    
+    @app.context_processor
+    def inject_parametres():
+        parametres = ParametrePharmacie.query.first()
+        return dict(parametres_pharmacie=parametres if parametres else None)
     
     # Enregistrement des blueprints
     app.register_blueprint(auth)
