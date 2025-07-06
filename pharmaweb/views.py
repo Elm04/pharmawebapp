@@ -35,42 +35,6 @@ views = Blueprint('views', __name__)
 # Routes communes
 # ---------------------------
 
-@views.route('/debug-panier')
-@login_required
-def debug_panier():
-    panier = session.get('panier', [])
-    return jsonify({
-        'type_panier': str(type(panier)),
-        'contenu': panier,
-        'est_iterable': hasattr(panier, '__iter__'),
-        'items_convertis': _generer_ticket(None, panier)['items']
-    })
-    
-@views.route('/test/all-cases')
-def test_all_cases():
-    test_cases = [
-        # Corrected: Use a dictionary {} for 'panier': value
-        ("Liste normale", {'panier': [{'id':1,'nom':'Test','prix':10,'quantite':2}]}),
-        ("Dict normal", {'panier': {'1':{'id':1,'nom':'Test','prix':10,'quantite':2}}}),
-        ("Panier vide", {'panier': []}),
-        ("Format invalide", {'panier': object()}) # This will still likely cause issues downstream when serializing/deserializing, but syntax is fixed.
-    ]
-    
-    return "\n".join(
-        f'<a href="{url_for("views.test_case", case=case[0])}">{case[0]}</a><br>'
-        for case in test_cases
-    )
-
-@views.route('/test-case/<case>')
-def test_case(case):
-    cases = {
-        'normal': {'panier': [{'id':1,'nom':'Test','prix':10,'quantite':2}]},
-        'dict': {'panier': {'1':{'id':1,'nom':'Test','prix':10,'quantite':2}}},
-        'vide': {'panier': []},
-        'invalide': {'panier': object()}
-    }
-    return render_template('ventes/ticket.html', 
-                         ticket=_generer_ticket(None, cases.get(case, {}).get('panier')))
 
 @views.route('/')
 def index():

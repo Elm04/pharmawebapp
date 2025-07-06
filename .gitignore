@@ -1,0 +1,36 @@
+# Fichiers de configuration sensibles
+.env
+*.env
+/instance/
+
+# Fichiers de base de données SQLite
+*.db
+*.sqlite
+/instance/pharma.db
+
+# Fichiers Python temporaires
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environnements virtuels
+venv/
+env/
+.venv/
+
+# Fichiers de développement
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Fichiers générés par Flask
+/migrations/
+!/migrations/versions/
+
+# Logs et fichiers de débogage
+*.log
+logs/
+
+# Fichiers de sauvegarde
+*.bak

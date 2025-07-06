@@ -2,54 +2,113 @@
 
 {% block content %}
     <!-- Hero Section -->
-    <section class="hero-section text-center">
+    <section class="hero-section text-center text-white" style="background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1581093450021-4a7360e9a3c3') no-repeat center center; background-size: cover; padding: 8rem 0;">
         <div class="container">
-            <h1 class="display-4 fw-bold mb-4">Gestion Pharmaceutique Simplifiée</h1>
-            <p class="lead mb-5">Solution complète pour la gestion de votre pharmacie</p>
-            <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg px-4 me-2">
-                <i class="fas fa-sign-in-alt me-2"></i> Se connecter
-            </a>
-            <a href="#features" class="btn btn-outline-light btn-lg px-4">
-                <i class="fas fa-info-circle me-2"></i> En savoir plus
-            </a>
+            <h1 class="display-4 fw-bold mb-4">PHARMACIE BARAKA</h1>
+            <p class="lead mb-5">Votre santé, notre priorité - Solutions pharmaceutiques complètes</p>
+            <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg px-4 me-2">
+                    <i class="fas fa-sign-in-alt me-2"></i> Espace Professionnel
+                </a>
+                <a href="#services" class="btn btn-light btn-lg px-4">
+                    <i class="fas fa-concierge-bell me-2"></i> Nos Services
+                </a>
+            </div>
         </div>
     </section>
 
-    <!-- Features Section -->
-    <section id="features" class="py-5 bg-light">
+    <!-- Services Section -->
+    <section id="services" class="py-5 bg-light">
         <div class="container">
-            <h2 class="text-center mb-5">Nos Fonctionnalités</h2>
+            <h2 class="text-center mb-5">Nos Services</h2>
             <div class="row g-4">
+                <!-- Service 1 -->
                 <div class="col-md-4">
-                    <div class="card h-100 border-0 shadow-sm">
-                        <div class="card-body text-center">
-                            <div class="feature-icon">
-                                <i class="fas fa-pills"></i>
+                    <div class="card h-100 border-0 shadow-sm hover-shadow">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon mb-4 text-primary">
+                                <i class="fas fa-pills fa-3x"></i>
                             </div>
-                            <h3>Gestion des Médicaments</h3>
-                            <p>Suivi complet du stock, alertes de péremption et gestion des fournisseurs.</p>
+                            <h3 class="h4">Gestion des Médicaments</h3>
+                            <p class="text-muted">Stock intelligent avec alertes de péremption et gestion des fournisseurs.</p>
                         </div>
                     </div>
                 </div>
+                
+                <!-- Service 2 -->
                 <div class="col-md-4">
-                    <div class="card h-100 border-0 shadow-sm">
-                        <div class="card-body text-center">
-                            <div class="feature-icon">
-                                <i class="fas fa-receipt"></i>
+                    <div class="card h-100 border-0 shadow-sm hover-shadow">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon mb-4 text-primary">
+                                <i class="fas fa-truck fa-3x"></i>
                             </div>
-                            <h3>Ventes & Facturation</h3>
-                            <p>Enregistrement des ventes, génération de factures et gestion des paiements.</p>
+                            <h3 class="h4">Livraison à Domicile</h3>
+                            <p class="text-muted">Commandez vos médicaments et produits de santé en ligne, nous livrons chez vous.</p>
+                            <button class="btn btn-sm btn-outline-primary mt-2" data-bs-toggle="modal" data-bs-target="#commandeModal">
+                                Commander maintenant
+                            </button>
                         </div>
                     </div>
                 </div>
+                
+                <!-- Service 3 -->
                 <div class="col-md-4">
-                    <div class="card h-100 border-0 shadow-sm">
-                        <div class="card-body text-center">
-                            <div class="feature-icon">
-                                <i class="fas fa-user-md"></i>
+                    <div class="card h-100 border-0 shadow-sm hover-shadow">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon mb-4 text-primary">
+                                <i class="fas fa-user-md fa-3x"></i>
                             </div>
-                            <h3>Gestion des Patients</h3>
-                            <p>Dossiers patients complets, historique des achats et gestion des ordonnances.</p>
+                            <h3 class="h4">Conseil Pharmaceutique</h3>
+                            <p class="text-muted">Nos pharmaciens vous conseillent sur vos traitements et produits de santé.</p>
+                            <button class="btn btn-sm btn-outline-primary mt-2" data-bs-toggle="modal" data-bs-target="#conseilModal">
+                                Demander conseil
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Additional Services Row -->
+                <div class="col-md-4 mt-4">
+                    <div class="card h-100 border-0 shadow-sm hover-shadow">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon mb-4 text-primary">
+                                <i class="fas fa-file-invoice-dollar fa-3x"></i>
+                            </div>
+                            <h3 class="h4">Demande de Proforma</h3>
+                            <p class="text-muted">Obtenez un devis personnalisé pour vos besoins en médicaments.</p>
+                            <button class="btn btn-sm btn-outline-primary mt-2" data-bs-toggle="modal" data-bs-target="#proformaModal">
+                                Demander un proforma
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mt-4">
+                    <div class="card h-100 border-0 shadow-sm hover-shadow">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon mb-4 text-primary">
+                                <i class="fas fa-heartbeat fa-3x"></i>
+                            </div>
+                            <h3 class="h4">Diagnostic Santé</h3>
+                            <p class="text-muted">Service d'orientation pour vos symptômes et problèmes de santé.</p>
+                            <button class="btn btn-sm btn-outline-primary mt-2" data-bs-toggle="modal" data-bs-target="#diagnosticModal">
+                                Poser une question
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mt-4">
+                    <div class="card h-100 border-0 shadow-sm hover-shadow">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon mb-4 text-primary">
+                                <i class="fas fa-calendar-check fa-3x"></i>
+                            </div>
+                            <h3 class="h4">Rappel de Traitement</h3>
+                            <p class="text-muted">Service gratuit de rappel pour vos prises de médicaments.</p>
+                            <button class="btn btn-sm btn-outline-primary mt-2" data-bs-toggle="modal" data-bs-target="#rappelModal">
+                                S'inscrire
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -58,23 +117,211 @@
     </section>
 
     <!-- About Section -->
-    <section id="about" class="py-5">
+    <section id="about" class="py-5 bg-white">
         <div class="container">
             <div class="row align-items-center">
-                <div class="col-lg-6">
-                    <h2>À propos de PharmaGest</h2>
-                    <p class="lead">Une solution conçue par des professionnels pour des professionnels.</p>
-                    <p>PharmaGest est un système complet de gestion pharmaceutique qui simplifie vos opérations quotidiennes tout en garantissant conformité et sécurité.</p>
+                <div class="col-lg-6 mb-4 mb-lg-0">
+                    <h2 class="fw-bold mb-4">À propos de la Pharmacie BARAKA</h2>
+                    <p class="lead text-primary">Votre partenaire santé depuis 2010</p>
+                    <p>Installée au cœur de la ville, la Pharmacie BARAKA s'engage à fournir des services pharmaceutiques de qualité avec un accent particulier sur le conseil personnalisé et l'accompagnement thérapeutique.</p>
                     <ul class="list-unstyled">
-                        <li class="mb-2"><i class="fas fa-check-circle text-primary me-2"></i> Interface intuitive</li>
-                        <li class="mb-2"><i class="fas fa-check-circle text-primary me-2"></i> Sécurité des données</li>
-                        <li class="mb-2"><i class="fas fa-check-circle text-primary me-2"></i> Rapports personnalisés</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-primary me-2"></i> Equipe de pharmaciens diplômés</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-primary me-2"></i> Large gamme de produits</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-primary me-2"></i> Service client 24/7</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-primary me-2"></i> Livraison express</li>
                     </ul>
+                    <div class="d-flex align-items-center mt-4">
+                        <div class="me-4">
+                            <h3 class="mb-0 text-primary">15+</h3>
+                            <p class="mb-0 text-muted">Années d'expérience</p>
+                        </div>
+                        <div class="me-4">
+                            <h3 class="mb-0 text-primary">5000+</h3>
+                            <p class="mb-0 text-muted">Clients satisfaits</p>
+                        </div>
+                    </div>
                 </div>
                 <div class="col-lg-6">
-                    <img src="https://images.unsplash.com/photo-1581093450021-4a7360e9a3c3" alt="Pharmacie" class="img-fluid rounded shadow">
+                    <div class="ratio ratio-16x9">
+                        <img src="https://images.unsplash.com/photo-1587854692152-cbe660dbde88" alt="Pharmacie BARAKA" class="img-fluid rounded shadow">
+                    </div>
                 </div>
             </div>
         </div>
     </section>
+
+    <!-- Testimonials Section -->
+    <section class="py-5 bg-primary text-white">
+        <div class="container">
+            <h2 class="text-center mb-5">Témoignages</h2>
+            <div class="row">
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <div class="card h-100 bg-transparent border-light">
+                        <div class="card-body text-center">
+                            <img src="https://randomuser.me/api/portraits/women/32.jpg" class="rounded-circle mb-3" width="80" alt="Client">
+                            <p class="card-text">"Service exceptionnel! Ma commande a été livrée en moins de 2 heures."</p>
+                            <div class="text-warning mb-2">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <h5 class="mb-0">Aïcha M.</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <div class="card h-100 bg-transparent border-light">
+                        <div class="card-body text-center">
+                            <img src="https://randomuser.me/api/portraits/men/41.jpg" class="rounded-circle mb-3" width="80" alt="Client">
+                            <p class="card-text">"Les conseils du pharmacien m'ont vraiment aidé à mieux comprendre mon traitement."</p>
+                            <div class="text-warning mb-2">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star-half-alt"></i>
+                            </div>
+                            <h5 class="mb-0">Mohamed K.</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 bg-transparent border-light">
+                        <div class="card-body text-center">
+                            <img src="https://randomuser.me/api/portraits/women/63.jpg" class="rounded-circle mb-3" width="80" alt="Client">
+                            <p class="card-text">"Proforma détaillé et professionnel, exactement ce dont j'avais besoin."</p>
+                            <div class="text-warning mb-2">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <h5 class="mb-0">Fatima Z.</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modals for Services -->
+    <!-- Commande Modal -->
+    <div class="modal fade" id="commandeModal" tabindex="-1" aria-labelledby="commandeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="commandeModalLabel">Commande de Produits</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="nomClient" class="form-label">Nom Complet</label>
+                                <input type="text" class="form-control" id="nomClient" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="telClient" class="form-label">Téléphone</label>
+                                <input type="tel" class="form-control" id="telClient" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="adresseLivraison" class="form-label">Adresse de Livraison</label>
+                            <textarea class="form-control" id="adresseLivraison" rows="2" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="produitsCommande" class="form-label">Produits à Commander</label>
+                            <textarea class="form-control" id="produitsCommande" rows="3" placeholder="Ex: Paracétamol 500mg - 2 boites, Doliprane 1000mg - 1 boite" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="dateLivraison" class="form-label">Date et Heure Souhaitée</label>
+                            <input type="datetime-local" class="form-control" id="dateLivraison">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Envoyer la Commande</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conseil Modal -->
+    <div class="modal fade" id="conseilModal" tabindex="-1" aria-labelledby="conseilModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="conseilModalLabel">Demande de Conseil</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label for="nomConseil" class="form-label">Votre Nom</label>
+                            <input type="text" class="form-control" id="nomConseil">
+                        </div>
+                        <div class="mb-3">
+                            <label for="questionConseil" class="form-label">Votre Question</label>
+                            <textarea class="form-control" id="questionConseil" rows="4" placeholder="Décrivez votre problème ou la question que vous avez..." required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="contactConseil" class="form-label">Comment souhaitez-vous être contacté?</label>
+                            <select class="form-select" id="contactConseil">
+                                <option value="tel">Par téléphone</option>
+                                <option value="email">Par email</option>
+                                <option value="whatsapp">Par WhatsApp</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Envoyer la Demande</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Proforma Modal -->
+    <div class="modal fade" id="proformaModal" tabindex="-1" aria-labelledby="proformaModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="proformaModalLabel">Demande de Proforma</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="proformaNom" class="form-label">Nom de l'Institution/Client</label>
+                                <input type="text" class="form-control" id="proformaNom" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="proformaContact" class="form-label">Personne à Contacter</label>
+                                <input type="text" class="form-control" id="proformaContact" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="proformaEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="proformaEmail" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="proformaTel" class="form-label">Téléphone</label>
+                                <input type="tel" class="form-control" id="proformaTel" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="proformaProduits" class="form-label">Liste des Produits</label>
+                            <textarea class="form-control" id="proformaProduits" rows="5" placeholder="Nom du produit, dosage, quantité... (un par ligne)" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="proformaNotes" class="form-label">Notes Additionnelles</label>
+                            <textarea class="form-control" id="proformaNotes" rows="2"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Demander le Proforma</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}

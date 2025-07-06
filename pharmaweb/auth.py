@@ -23,9 +23,6 @@ def login():
             if user:
                 print(f"Hash stocké: {user.password}")
                 from werkzeug.security import check_password_hash
-                print(f"Mot de passe testé: {form.password.data}")
-                print(f"Résultat vérification: {check_password_hash(user.password, form.password.data)}")
-            
             if not user:
                 flash('Identifiant incorrect', 'danger')
                 return redirect(url_for('auth.login'))
