@@ -20,9 +20,6 @@ def login():
         try:
             user = Utilisateur.query.filter_by(login=form.username.data).first()
             
-            # Debug: Afficher les valeurs comparées
-            print(f"Tentative de connexion: {form.username.data}")
-            print(f"Utilisateur trouvé: {user}")
             if user:
                 print(f"Hash stocké: {user.password}")
                 from werkzeug.security import check_password_hash
