@@ -6,7 +6,7 @@ from .models import Utilisateur, ParametrePharmacie
 from .filters import format_currency
 from datetime import datetime
 
-def create_app(config_class=Config):
+def mainapp(config_class=Config):
     """Factory d'application Flask compatible WSGI"""
     app = Flask(__name__)
     
