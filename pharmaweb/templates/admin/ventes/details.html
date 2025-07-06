@@ -1,0 +1,100 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block content %}
+<h2>Détail de la Vente</h2>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="fas fa-info-circle me-1"></i>
+        Informations
+    </div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <strong>N° Ticket:</strong> {{ vente.numero_ticket }}
+            </div>
+            <div class="col-md-4">
+                <strong>Date:</strong> {{ vente.date_vente.strftime('%d/%m/%Y %H:%M') }}
+            </div>
+            <div class="col-md-4">
+                <strong>Caissier:</strong> {{ vente.caissier.prenom }} {{ vente.caissier.nom }}
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <strong>Client:</strong> 
+                {% if vente.client %}
+                    {{ vente.client.prenom }} {{ vente.client.nom }}
+                {% else %}
+                    Non renseigné
+                {% endif %}
+            </div>
+            <div class="col-md-4">
+                <strong>Mode de paiement:</strong> {{ vente.mode_paiement }}
+            </div>
+            <div class="col-md-4">
+                <strong>Statut:</strong> {{ vente.statut }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="fas fa-shopping-cart me-1"></i>
+        Produits
+    </div>
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Médicament</th>
+                    <th>Prix unitaire</th>
+                    <th>Quantité</th>
+                    <th>TVA</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ligne in vente.lignes %}
+                <tr>
+                    <td>{{ ligne.medicament.nom_commercial }}</td>
+                    <td>{{ "%.2f"|format(ligne.prix_unitaire) }} Fc</td>
+                    <td>{{ ligne.quantite }}</td>
+                    <td>{{ "%.1f"|format(ligne.tva) }}%</td>
+                    <td>{{ "%.2f"|format(ligne.prix_unitaire * ligne.quantite * (1 + ligne.tva/100)) }} Fc</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="4" class="text-end">Total HT:</th>
+                    <th>{{ "%.2f"|format(vente.montant_total / (1 + vente.lignes[0].tva/100) if vente.lignes else 0) }} FC</th>
+                </tr>
+                <tr>
+                    <th colspan="4" class="text-end">TVA:</th>
+                    <th>{{ "%.2f"|format(vente.montant_total - (vente.montant_total / (1 + vente.lignes[0].tva/100)) if vente.lignes else 0) }} Fc</th>
+                </tr>
+                <tr>
+                    <th colspan="4" class="text-end">Total TTC:</th>
+                    <th>{{ "%.2f"|format(vente.montant_total) }} FC</th>
+                </tr>
+                <tr>
+                    <th colspan="4" class="text-end">Montant réglé:</th>
+                    <th>{{ "%.2f"|format(vente.montant_regle) }} FC</th>
+                </tr>
+                {% if vente.reste_a_payer > 0 %}
+                <tr>
+                    <th colspan="4" class="text-end">Reste à payer:</th>
+                    <th class="text-danger">{{ "%.2f"|format(vente.reste_a_payer) }} FC</th>
+                </tr>
+                {% endif %}
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<a href="{{ url_for('views.gestion_ventes') }}" class="btn btn-secondary">
+    <i class="fas fa-arrow-left"></i> Retour
+</a>
+{% endblock %}

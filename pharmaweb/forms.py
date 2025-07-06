@@ -1,7 +1,39 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SelectField, DateField, DecimalField, IntegerField, TextAreaField, BooleanField, SubmitField
-from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError
+from wtforms import StringField, PasswordField, SelectField, DateField, DecimalField, IntegerField, TextAreaField, BooleanField, SubmitField,FileField,validators
+from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError,DataRequired, Optional,NumberRange
 from .models import Utilisateur, Medicament, Patient
+from flask import request
+
+
+
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+CATEGORIES_MEDICAMENTS = [
+    # Antibiotiques
+    ('ANTIBIOTIQUES_PENICILLINES', 'Antibiotiques - Pénicillines'),
+    ('ANTIBIOTIQUES_CEPHALOSPORINES', 'Antibiotiques - Céphalosporines'),
+    ('ANTIBIOTIQUES_MACROLIDES', 'Antibiotiques - Macrolides'),
+    
+    # Antalgiques
+    ('ANALGESIQUES_OPIOIDES', 'Antalgiques - Opioïdes'),
+    ('ANALGESIQUES_NSAID', 'Antalgiques - Anti-inflammatoires'),
+    
+    # Cardiovasculaire
+    ('CARDIO_ANTIHYPERTENSEURS', 'Cardio - Antihypertenseurs'),
+    ('CARDIO_DIURETIQUES', 'Cardio - Diurétiques'),
+    
+    # Autres
+    ('DERMATO_CORTICOIDES', 'Dermatologie - Corticoides'),
+    ('DIABETE_INSULINES', 'Diabète - Insulines'),
+    ('GASTRO_ANTIACIDES', 'Gastro - Antiacides'),
+    ('PSY_ANTIDEPRESSEURS', 'Psychiatrie - Antidépresseurs'),
+    ('NEURO_ANTIEPILEPTIQUES', 'Neurologie - Antiépileptiques'),
+    ('ONCO_CHIMIOTHERAPIE', 'Oncologie - Chimiothérapie'),
+    ('OTC_DOULEUR', 'Automédication - Douleur'),
+    ('OTC_GRIPPE', 'Automédication - Grippe'),
+    ('PEDIATRIE_VACCINS', 'Pédiatrie - Vaccins'),
+    ('GYNECO_CONTRACEPTION', 'Gynécologie - Contraception')
+]
 
 class LoginForm(FlaskForm):
     username = StringField('Login', validators=[DataRequired()])  # Changé de 'login' à 'username' pour correspondre au template
@@ -63,26 +95,88 @@ class PatientForm(FlaskForm):
             raise ValidationError('Ce code patient est déjà utilisé.')
 
 class MedicamentForm(FlaskForm):
+    # Champ catégorie dynamique (à remplir dans la vue)
+    categorie = SelectField(
+        'Catégorie',
+        choices=[('', '-- Sélectionnez une catégorie --')] + CATEGORIES_MEDICAMENTS,
+        validators=[DataRequired(message="La catégorie est obligatoire")]
+    )
+    
     code_cip = StringField('Code CIP', validators=[DataRequired()])
-    nom_commercial = StringField('Nom commercial', validators=[DataRequired()])
-    dci = StringField('DCI', validators=[DataRequired()])
+    
+    nom_commercial = StringField(
+        'Nom commercial', 
+        validators=[DataRequired(message="Le nom commercial est obligatoire")]
+    )
+    
+    dci = StringField(
+        'DCI', 
+        validators=[DataRequired(message="La DCI est obligatoire")]
+    )
+    
     forme_galenique = StringField('Forme galénique')
     dosage = StringField('Dosage')
-    stock_actuel = IntegerField('Stock actuel', default=0)
-    stock_minimum = IntegerField('Stock minimum', default=10)
-    prix_achat = DecimalField('Prix d\'achat', places=2)
-    prix_vente = DecimalField('Prix de vente', places=2)
-    tva = DecimalField('TVA (%)', places=2, default=0)
+    
+    stock_actuel = IntegerField(
+        'Stock actuel', 
+        validators=[DataRequired(message="Le stock actuel est obligatoire")]
+    )
+    
+    stock_minimum = IntegerField(
+        'Stock minimum', 
+        validators=[DataRequired(message="Le stock minimum est obligatoire")]
+    )
+    
+    prix_achat = DecimalField(
+        'Prix d\'achat', 
+        places=2, 
+        validators=[Optional()]
+    )
+    
+    prix_vente = DecimalField(
+        'Prix de vente', 
+        places=2, 
+        validators=[Optional()]
+    )
+    
+    tva = DecimalField(
+        'TVA (%)', 
+        places=2, 
+        validators=[Optional()]
+    )
+    
     remboursable = BooleanField('Remboursable', default=False)
     conditionnement = StringField('Conditionnement')
-    date_peremption = DateField('Date de péremption', format='%Y-%m-%d')
-    image_path = StringField('Chemin de l\'image')
+    
+    date_peremption = DateField(
+        'Date de péremption', 
+        format='%Y-%m-%d', 
+        validators=[Optional()]
+    )
+    
+    
+    
+    
+    fournisseur_id = SelectField(
+        'Fournisseur',
+        coerce=lambda x: int(x) if x and x != 'None' else None,
+        validators=[Optional()],
+        choices=[]
+    )
+    
     submit = SubmitField('Enregistrer')
 
-    def validate_code_cip(self, code_cip):
-        medicament = Medicament.query.filter_by(code_cip=code_cip.data).first()
-        if medicament:
-            raise ValidationError('Ce code CIP est déjà utilisé.')
+    def validate_code_cip(self, field):
+        """Validation conditionnelle du code CIP"""
+        # Si c'est une modification (ID dans l'URL), on skip la validation si le CIP n'a pas changé
+        if 'id' in request.view_args:
+            medicament = Medicament.query.get(request.view_args['id'])
+            if medicament and medicament.code_cip == field.data:
+                return
+        
+        # Sinon, on vérifie l'unicité (pour les nouveaux médicaments)
+        if Medicament.query.filter_by(code_cip=field.data).first():
+            raise ValidationError('Ce code CIP existe déjà')
 
 class OrdonnanceForm(FlaskForm):
     numero_ordonnance = StringField('Numéro d\'ordonnance', validators=[DataRequired()])
@@ -109,6 +203,12 @@ class VenteForm(FlaskForm):
         ('tiers_payant', 'Tiers payant')
     ], validators=[DataRequired()])
     informations_paiement = TextAreaField('Informations de paiement')
+    montant_regle = DecimalField('Montant réglé', 
+                                places=2,
+                                validators=[
+                                    DataRequired(),
+                                    NumberRange(min=0)
+                                ])
     submit = SubmitField('Enregistrer la vente')
 
 class LigneVenteForm(FlaskForm):
@@ -146,3 +246,9 @@ class ParametresPharmacieForm(FlaskForm):
     message_accueil_recu = TextAreaField('Message d\'accueil')
     inclure_logo = BooleanField('Inclure le logo')
     submit = SubmitField('Mettre à jour')
+    
+class ProformaForm(FlaskForm):
+    reference = StringField('Référence', validators=[DataRequired()])
+    client = StringField('Client', validators=[DataRequired()])
+    date_validite = DateField('Date validité', format='%Y-%m-%d', validators=[DataRequired()])
+    submit = SubmitField('Enregistrer')

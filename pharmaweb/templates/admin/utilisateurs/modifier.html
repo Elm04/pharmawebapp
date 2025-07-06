@@ -1,0 +1,125 @@
+{% extends "admin/base_admin.html" %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Modifier l'utilisateur</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('views.admin_dashboard') }}">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('views.gestion_utilisateurs') }}">Utilisateurs</a></li>
+        <li class="breadcrumb-item active">Modifier {{ user.prenom }} {{ user.nom }}</li>
+    </ol>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-user-edit me-1"></i>
+            Modification de l'utilisateur
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('views.modifier_utilisateur', id=user.id) }}">
+                {{ form.hidden_tag() }}
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3 mb-md-0">
+                            {{ form.nom(class="form-control") }}
+                            {{ form.nom.label }}
+                            {% for error in form.nom.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            {{ form.prenom(class="form-control") }}
+                            {{ form.prenom.label }}
+                            {% for error in form.prenom.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-floating mb-3">
+                    {{ form.email(class="form-control") }}
+                    {{ form.email.label }}
+                    {% for error in form.email.errors %}
+                    <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-floating mb-3">
+                    {{ form.telephone(class="form-control") }}
+                    {{ form.telephone.label }}
+                    {% for error in form.telephone.errors %}
+                    <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3 mb-md-0">
+                            {{ form.login(class="form-control") }}
+                            {{ form.login.label }}
+                            {% for error in form.login.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            {{ form.role(class="form-select") }}
+                            {{ form.role.label }}
+                            {% for error in form.role.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3 mb-md-0">
+                            {{ form.password(class="form-control", placeholder="Laisser vide pour ne pas changer") }}
+                            {{ form.password.label }}
+                            {% for error in form.password.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <small class="text-muted">Laisser vide pour conserver le mot de passe actuel</small>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            {{ form.confirm_password(class="form-control", placeholder="Confirmer le nouveau mot de passe") }}
+                            {{ form.confirm_password.label }}
+                            {% for error in form.confirm_password.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-check mb-3">
+                    {{ form.actif(class="form-check-input") }}
+                    {{ form.actif.label(class="form-check-label") }}
+                </div>
+
+                <div class="d-flex justify-content-between mt-4 mb-0">
+                    <a href="{{ url_for('views.gestion_utilisateurs') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Annuler
+                    </a>
+                    <div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Enregistrer
+                        </button>
+                        <a href="{{ url_for('views.supprimer_utilisateur', id=user.id) }}" 
+                           class="btn btn-danger ms-2"
+                           onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur?')">
+                            <i class="fas fa-trash-alt"></i> Supprimer
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,132 @@
+{% extends "ventes/base_ventes.html" %}
+
+{% block ventes_content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Colonne Recherche -->
+        <div class="col-md-5">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-search me-2"></i> Recherche de Médicaments
+                </div>
+                <div class="card-body">
+                    <form method="GET" class="mb-3">
+                        <div class="input-group">
+                            <input type="text" class="form-control" 
+                                   name="recherche" 
+                                   placeholder="Nom ou code CIP..." 
+                                   value="{{ search_term }}">
+                            <button type="submit" class="btn btn-outline-light">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Tableau des produits -->
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Produit</th>
+                                    <th>CIP</th>
+                                    <th>Prix</th>
+                                    <th>Stock</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for med in medicaments %}
+                                <tr>
+                                    <td>{{ med.nom_commercial }}</td>
+                                    <td>{{ med.code_cip }}</td>
+                                    <td>{{ "%.2f"|format(med.prix_vente) }} Fc</td>
+                                    <td>{{ med.stock_actuel }}</td>
+                                    <td>
+                                        <form method="POST" class="d-flex">
+                                            <input type="hidden" name="medicament_id" value="{{ med.id }}">
+                                            <input type="number" name="quantite" value="1" min="1" 
+                                                   max="{{ med.stock_actuel }}" class="form-control form-control-sm" style="width: 60px;">
+                                            <button type="submit" class="btn btn-sm btn-success ms-2">
+                                                <i class="fas fa-cart-plus"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">Aucun médicament trouvé</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Colonne Panier -->
+        <div class="col-md-7">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <i class="fas fa-shopping-cart me-2"></i> Panier
+                </div>
+                <div class="card-body">
+                    {% if panier %}
+                    <ul class="list-group mb-3">
+                        {% for item in panier %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ item.nom }}</strong>
+                                <span class="text-muted small">x {{ item.quantite }}</span>
+                            </div>
+                            <div>
+                                <span class="badge bg-primary rounded-pill">
+                                    {#{ "%.2f"|format(item.prix * item.quantite) }#} Fc
+                                    {{ (item.prix * item.quantite)|format_currency }} Fc
+                                </span>
+                                <a href="{{ url_for('views.retirer_du_panier', index=loop.index0) }}" 
+                                   class="btn btn-sm btn-danger ms-2">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    
+                    <div class="d-flex justify-content-between mb-3">
+                        <h5>Total:</h5>
+                        <h4>{{ total|format_currency }} Fc</h4>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center">Panier vide</p>
+                    {% endif %}
+                    
+                    <form method="POST" action="{{ url_for('views.nouvelle_vente') }}">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.patient_id.label(class="form-label") }}
+                            {{ form.patient_id(class="form-select") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.mode_paiement.label(class="form-label") }}
+                            {{ form.mode_paiement(class="form-select") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.montant_regle.label(class="form-label") }}
+                            {{ form.montant_regle(class="form-control", step="0.01", min="0") }}
+                            <small class="text-muted">Montant total: {{ total|format_currency }} Fc</small>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success w-100" {% if not panier %}disabled{% endif %}>
+                            <i class="fas fa-check-circle me-2"></i> Finaliser la vente
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -2,8 +2,8 @@ from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
-from pharmaweb.extensions import db
 
+from .extensions import db
 
 class Utilisateur(db.Model, UserMixin):
     __tablename__ = 'utilisateurs'
@@ -20,17 +20,17 @@ class Utilisateur(db.Model, UserMixin):
     actif = db.Column(db.Boolean, default=True)
     
     # Relations
-    ordonnances = db.relationship('Ordonnance', backref='validateur', lazy=True)
-    ventes = db.relationship('Vente', backref='caissier', lazy=True)
-    mouvements_stock = db.relationship('MouvementStock', backref='operateur', lazy=True)
-    alertes = db.relationship('Alerte', backref='responsable', lazy=True)
+    ordonnances_validees = db.relationship('Ordonnance', back_populates='validateur', lazy=True)
+    ventes = db.relationship('Vente', back_populates='caissier', lazy=True)
+    mouvements_stock = db.relationship('MouvementStock', back_populates='operateur', lazy=True)
+    alertes = db.relationship('Alerte', back_populates='responsable', lazy=True)
+    proformas = db.relationship('Proforma', back_populates='createur', lazy=True)
     
     def set_password(self, password):
         self.password = generate_password_hash(password)
     
     def check_password(self, password):
         return check_password_hash(self.password, password)
-    
 
 class Patient(db.Model):
     __tablename__ = 'patients'
@@ -43,17 +43,17 @@ class Patient(db.Model):
     sexe = db.Column(db.Enum('M', 'F', 'Autre', name='sexes'))
     groupe_sanguin = db.Column(db.String(5))
     adresse = db.Column(db.Text)
-    telephone = db.Column(db.String(20))
+    telephone = db.Column(db.String(20), nullable=False)
     email = db.Column(db.String(100))
     assurance = db.Column(db.String(100))
     numero_assurance = db.Column(db.String(50))
     allergies = db.Column(db.Text)
     antecedents = db.Column(db.Text)
-    date_creation = db.Column(db.DateTime, default=datetime.utcnow)
+    date_creation = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     
     # Relations
-    ordonnances = db.relationship('Ordonnance', backref='patient', lazy=True)
-    ventes = db.relationship('Vente', backref='client', lazy=True)
+    ordonnances = db.relationship('Ordonnance', back_populates='patient', cascade='all, delete-orphan')
+    ventes = db.relationship('Vente', back_populates='client')
 
 class Fournisseur(db.Model):
     __tablename__ = 'fournisseurs'
@@ -69,18 +69,8 @@ class Fournisseur(db.Model):
     actif = db.Column(db.Boolean, default=True)
     
     # Relations
-    commandes = db.relationship('Commande', backref='fournisseur', lazy=True)
-    medicaments = db.relationship('Medicament', backref='fournisseur_principal', lazy=True)
-
-class CategorieMedicament(db.Model):
-    __tablename__ = 'categories_medicaments'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    nom = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text)
-    
-    # Relations
-    medicaments = db.relationship('Medicament', backref='categorie', lazy=True)
+    commandes = db.relationship('Commande', back_populates='fournisseur', lazy=True)
+    medicaments = db.relationship('Medicament', back_populates='fournisseur', lazy=True)
 
 class Medicament(db.Model):
     __tablename__ = 'medicaments'
@@ -91,24 +81,25 @@ class Medicament(db.Model):
     dci = db.Column(db.String(100), nullable=False)
     forme_galenique = db.Column(db.String(50))
     dosage = db.Column(db.String(50))
-    categorie_id = db.Column(db.Integer, db.ForeignKey('categories_medicaments.id'))
+    categorie = db.Column(db.String(100), nullable=False)
     stock_actuel = db.Column(db.Integer, default=0)
     stock_minimum = db.Column(db.Integer, default=10)
     prix_achat = db.Column(db.Numeric(10, 2))
     prix_vente = db.Column(db.Numeric(10, 2))
-    tva = db.Column(db.Numeric(5, 2), default=0)
+    tva = db.Column(db.Float, default=0.0)  # Valeur par défaut 0
     remboursable = db.Column(db.Boolean, default=False)
     conditionnement = db.Column(db.String(50))
     date_peremption = db.Column(db.Date)
     fournisseur_id = db.Column(db.Integer, db.ForeignKey('fournisseurs.id'))
-    image_path = db.Column(db.String(255))
+
     
     # Relations
-    lignes_ordonnance = db.relationship('LigneOrdonnance', backref='medicament', lazy=True)
-    lignes_vente = db.relationship('LigneVente', backref='medicament', lazy=True)
-    mouvements_stock = db.relationship('MouvementStock', backref='medicament', lazy=True)
-    alertes = db.relationship('Alerte', backref='medicament', lazy=True)
-    proforma_details = db.relationship('ProformaDetail', backref='medicament', lazy=True)
+    fournisseur = db.relationship('Fournisseur', back_populates='medicaments')
+    lignes_ordonnance = db.relationship('LigneOrdonnance', back_populates='medicament', cascade='all, delete-orphan')
+    lignes_vente = db.relationship('LigneVente', back_populates='medicament', cascade='all, delete-orphan')
+    mouvements_stock = db.relationship('MouvementStock', back_populates='medicament', cascade='all, delete-orphan')
+    alertes = db.relationship('Alerte', back_populates='medicament', cascade='all, delete-orphan')
+    details_proforma = db.relationship('ProformaDetail', back_populates='medicament', cascade='all, delete-orphan')
 
 class Commande(db.Model):
     __tablename__ = 'commandes'
@@ -120,6 +111,9 @@ class Commande(db.Model):
     statut = db.Column(db.String(50), nullable=False)
     montant_total = db.Column(db.Numeric(10, 2))
     notes = db.Column(db.Text)
+    
+    # Relations
+    fournisseur = db.relationship('Fournisseur', back_populates='commandes')
 
 class Ordonnance(db.Model):
     __tablename__ = 'ordonnances'
@@ -135,7 +129,9 @@ class Ordonnance(db.Model):
     statut = db.Column(db.Enum('en_attente', 'validee', 'pretee', 'livree', 'annulee', name='statuts_ordonnance'), default='en_attente')
     
     # Relations
-    lignes = db.relationship('LigneOrdonnance', backref='ordonnance', lazy=True)
+    patient = db.relationship('Patient', back_populates='ordonnances')
+    validateur = db.relationship('Utilisateur', back_populates='ordonnances_validees')
+    lignes = db.relationship('LigneOrdonnance', back_populates='ordonnance', cascade='all, delete-orphan')
 
 class LigneOrdonnance(db.Model):
     __tablename__ = 'lignes_ordonnance'
@@ -147,6 +143,10 @@ class LigneOrdonnance(db.Model):
     posologie = db.Column(db.Text)
     duree_traitement = db.Column(db.String(50))
     substitutable = db.Column(db.Boolean, default=True)
+    
+    # Relations
+    ordonnance = db.relationship('Ordonnance', back_populates='lignes')
+    medicament = db.relationship('Medicament', back_populates='lignes_ordonnance')
 
 class Vente(db.Model):
     __tablename__ = 'ventes'
@@ -156,15 +156,17 @@ class Vente(db.Model):
     date_vente = db.Column(db.DateTime, default=datetime.utcnow)
     utilisateur_id = db.Column(db.Integer, db.ForeignKey('utilisateurs.id'), nullable=False)
     patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'))
-    reste_a_payer = db.Column(db.Numeric(10, 2))
     montant_total = db.Column(db.Numeric(10, 2), nullable=False)
     montant_regle = db.Column(db.Numeric(10, 2), nullable=False)
-    mode_paiement = db.Column(db.Enum('especes', 'carte', 'cheque', 'virement', 'tiers_payant', name='modes_paiement'), nullable=False)
-    informations_paiement = db.Column(db.Text)
+    reste_a_payer = db.Column(db.Numeric(10, 2), default=0)
+    mode_paiement = db.Column(db.String(20), nullable=False)
+    statut = db.Column(db.String(20), default='finalisee')
     
     # Relations
-    lignes = db.relationship('LigneVente', backref='vente', lazy=True)
-    historique = db.relationship('HistoriqueVente', backref='vente', lazy=True)
+    caissier = db.relationship('Utilisateur', back_populates='ventes')
+    client = db.relationship('Patient', back_populates='ventes')
+    lignes = db.relationship('LigneVente', back_populates='vente', cascade='all, delete-orphan')
+    historique = db.relationship('HistoriqueVente', back_populates='vente', cascade='all, delete-orphan')
 
 class LigneVente(db.Model):
     __tablename__ = 'lignes_vente'
@@ -176,7 +178,10 @@ class LigneVente(db.Model):
     prix_unitaire = db.Column(db.Numeric(10, 2), nullable=False)
     tva = db.Column(db.Numeric(5, 2), nullable=False)
     remise = db.Column(db.Numeric(5, 2), default=0)
-    total_ligne = db.Column(db.Numeric(10, 2))
+    
+    # Relations
+    medicament = db.relationship('Medicament', back_populates='lignes_vente')
+    vente = db.relationship('Vente', back_populates='lignes')
 
 class MouvementStock(db.Model):
     __tablename__ = 'mouvements_stock'
@@ -185,24 +190,39 @@ class MouvementStock(db.Model):
     medicament_id = db.Column(db.Integer, db.ForeignKey('medicaments.id'), nullable=False)
     type_mouvement = db.Column(db.Enum('entree', 'sortie', 'inventaire', 'ajustement', name='types_mouvement'), nullable=False)
     quantite = db.Column(db.Integer, nullable=False)
-    date_mouvement = db.Column(db.DateTime, default=datetime.utcnow)
+    date_mouvement = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     utilisateur_id = db.Column(db.Integer, db.ForeignKey('utilisateurs.id'), nullable=False)
     reference_id = db.Column(db.Integer)
     reference_type = db.Column(db.Enum('achat', 'vente', 'ordonnance', 'inventaire', name='types_reference'))
     notes = db.Column(db.Text)
+    
+    # Relations
+    medicament = db.relationship('Medicament', back_populates='mouvements_stock')
+    operateur = db.relationship('Utilisateur', back_populates='mouvements_stock')
 
 class Alerte(db.Model):
     __tablename__ = 'alertes'
     
     id = db.Column(db.Integer, primary_key=True)
-    type_alerte = db.Column(db.Enum('rupture_stock', 'peremption', 'seuil_minimum', 'interaction', 'autre', name='types_alerte'), nullable=False)
-    medicament_id = db.Column(db.Integer, db.ForeignKey('medicaments.id'))
+    type_alerte = db.Column(db.Enum(
+        'rupture_stock', 
+        'peremption', 
+        'seuil_minimum', 
+        'interaction', 
+        'autre', 
+        name='types_alerte'
+    ), nullable=False)
+    medicament_id = db.Column(db.Integer, db.ForeignKey('medicaments.id'), nullable=True)
     message = db.Column(db.Text, nullable=False)
-    date_creation = db.Column(db.DateTime, default=datetime.utcnow)
+    date_creation = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     date_resolution = db.Column(db.DateTime)
-    statut = db.Column(db.Enum('active', 'resolue', name='statuts_alerte'), default='active')
-    priorite = db.Column(db.Enum('basse', 'moyenne', 'haute', 'critique', name='priorites_alerte'), default='moyenne')
-    utilisateur_id = db.Column(db.Integer, db.ForeignKey('utilisateurs.id'))
+    statut = db.Column(db.Enum('active', 'resolue', name='statuts_alerte'), default='active', nullable=False)
+    priorite = db.Column(db.Enum('basse', 'moyenne', 'haute', 'critique', name='priorites_alerte'), default='moyenne', nullable=False)
+    utilisateur_id = db.Column(db.Integer, db.ForeignKey('utilisateurs.id'), nullable=True)
+    
+    # Relations
+    medicament = db.relationship('Medicament', back_populates='alertes')
+    responsable = db.relationship('Utilisateur', back_populates='alertes')
 
 class Proforma(db.Model):
     __tablename__ = 'proformas'
@@ -216,7 +236,8 @@ class Proforma(db.Model):
     createur_id = db.Column(db.Integer, db.ForeignKey('utilisateurs.id'), nullable=False)
     
     # Relations
-    details = db.relationship('ProformaDetail', backref='proforma', lazy=True)
+    details = db.relationship('ProformaDetail', back_populates='proforma', cascade='all, delete-orphan')
+    createur = db.relationship('Utilisateur', back_populates='proformas')
 
 class ProformaDetail(db.Model):
     __tablename__ = 'proforma_details'
@@ -227,6 +248,10 @@ class ProformaDetail(db.Model):
     quantite = db.Column(db.Integer, nullable=False)
     prix_unitaire = db.Column(db.Numeric(10, 2), nullable=False)
     total = db.Column(db.Numeric(10, 2), nullable=False)
+    
+    # Relations
+    proforma = db.relationship('Proforma', back_populates='details')
+    medicament = db.relationship('Medicament', back_populates='details_proforma')
 
 class HistoriqueVente(db.Model):
     __tablename__ = 'historique_ventes'
@@ -237,6 +262,9 @@ class HistoriqueVente(db.Model):
     details = db.Column(db.Text)
     utilisateur_id = db.Column(db.Integer, db.ForeignKey('utilisateurs.id'), nullable=False)
     date_action = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relations
+    vente = db.relationship('Vente', back_populates='historique')
 
 class ParametrePharmacie(db.Model):
     __tablename__ = 'parametres_pharmacie'

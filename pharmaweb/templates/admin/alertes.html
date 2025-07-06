@@ -1,0 +1,101 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Alertes - PharmaGest{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4"><i class="fas fa-exclamation-triangle me-2"></i>Alertes</h1>
+    
+    <div class="card mb-4">
+        <div class="card-header bg-warning text-dark">
+            <i class="fas fa-box-open me-1"></i>
+            Stock bas (moins de 10 unités)
+        </div>
+        <div class="card-body">
+            {% if stock_bas %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Médicament</th>
+                            <th>Code CIP</th>
+                            <th>Stock actuel</th>
+                            <th>Seuil d'alerte</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for medicament in stock_bas %}
+                        <tr>
+                            <td>{{ medicament.nom_commercial }}</td>
+                            <td>{{ medicament.code_cip }}</td>
+                            <td class="text-danger fw-bold">{{ medicament.stock_actuel }}</td>
+                            <td>10</td>
+                            <td>
+                                <a href="{{ url_for('views.gestion_medicaments') }}?search={{ medicament.nom_commercial }}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i> Réapprovisionner
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle me-2"></i>
+                Aucun médicament en stock bas
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-danger text-white">
+            <i class="fas fa-clock me-1"></i>
+            Médicaments proches de l'expiration (30 jours)
+        </div>
+        <div class="card-body">
+            {% if produits_expiration %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Médicament</th>
+                            <th>Code CIP</th>
+                            <th>Date d'expiration</th>
+                            <th>Jours restants</th>
+                            <th>Stock</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for medicament in produits_peremption %}
+                        <tr class="{% if (medicament.date_expiration - datetime.now()).days <= 7 %}table-danger{% endif %}">
+                            <td>{{ medicament.nom_commercial }}</td>
+                            <td>{{ medicament.code_cip }}</td>
+                            <td>{{ medicament.date_peremption|format_datetime('%d/%m/%Y') }}</td>
+                            <td>{{ (medicament.date_peremption - datetime.now()).days }}</td>
+                            <td>{{ medicament.stock_actuel }}</td>
+                            <td>
+                                <a href="{{ url_for('views.gestion_medicaments') }}?search={{ medicament.nom_commercial }}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i> Vérifier
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle me-2"></i>
+                Aucun médicament proche de l'expiration
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

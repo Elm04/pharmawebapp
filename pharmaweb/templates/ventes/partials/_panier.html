@@ -1,0 +1,34 @@
+<div class="card shadow">
+    <div class="card-header bg-info text-white">
+        <div class="d-flex justify-content-between">
+            <h5>Panier Proforma</h5>
+            <span class="badge bg-light text-dark">
+                {{ session.get('panier_proforma', [])|length }} articles
+            </span>
+        </div>
+    </div>
+    <div class="card-body">
+        <ul class="list-group mb-3">
+            {% for item in session.get('panier_proforma', []) %}
+            <li class="list-group-item d-flex justify-content-between">
+                <div>
+                    <strong>{{ item.nom }}</strong><br>
+                    <small>{{ item.quantite }} x {{ item.prix }} Fc</small>
+                </div>
+                <span class="badge bg-primary rounded-pill">
+                    {{ (item.prix * item.quantite)|round(2) }} Fc
+                </span>
+            </li>
+            {% else %}
+            <li class="list-group-item text-center text-muted">
+                Panier vide
+            </li>
+            {% endfor %}
+        </ul>
+        
+        <div class="d-flex justify-content-between fw-bold fs-5">
+            <span>Total:</span>
+            <span>{{ session.get('panier_proforma', [])|sum(attribute='total')|default(0)|round(2) }} Fc</span>
+        </div>
+    </div>
+</div>

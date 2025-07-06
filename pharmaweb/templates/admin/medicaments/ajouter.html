@@ -1,0 +1,153 @@
+{% extends "admin/base_admin.html" %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">{{ 'Modifier' if medicament else 'Ajouter' }} un médicament</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('views.admin_dashboard') }}">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('views.gestion_medicaments') }}">Médicaments</a></li>
+        <li class="breadcrumb-item active">{{ 'Modification' if medicament else 'Ajout' }}</li>
+    </ol>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-pills me-1"></i>
+            {{ 'Modification' if medicament else 'Création' }} de médicament
+        </div>
+        <div class="card-body">
+            <form method="POST" enctype="multipart/form-data">
+                {{ form.hidden_tag() }}
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3 mb-md-0">
+                            <!-- Retirez le readonly pour le code CIP -->
+                            {{ form.code_cip(class="form-control") }}
+                            {{ form.code_cip.label }}
+                            {% for error in form.code_cip.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            {{ form.nom_commercial(class="form-control") }}
+                            {{ form.nom_commercial.label }}
+                            {% for error in form.nom_commercial.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3 mb-md-0">
+                            {{ form.dci(class="form-control") }}
+                            {{ form.dci.label }}
+                            {% for error in form.dci.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            {{ form.categorie(class="form-select") }}
+                            {{ form.categorie.label }}
+                            {% for error in form.categorie.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="form-floating mb-3 mb-md-0">
+                            {{ form.forme_galenique(class="form-control") }}
+                            {{ form.forme_galenique.label }}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-floating mb-3 mb-md-0">
+                            {{ form.dosage(class="form-control") }}
+                            {{ form.dosage.label }}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            {{ form.conditionnement(class="form-control") }}
+                            {{ form.conditionnement.label }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="form-floating mb-3 mb-md-0">
+                            {{ form.stock_actuel(class="form-control") }}
+                            {{ form.stock_actuel.label }}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-floating mb-3 mb-md-0">
+                            {{ form.stock_minimum(class="form-control") }}
+                            {{ form.stock_minimum.label }}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            {{ form.date_peremption(class="form-control") }}
+                            {{ form.date_peremption.label }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="form-floating mb-3 mb-md-0">
+                            {{ form.prix_achat(class="form-control") }}
+                            {{ form.prix_achat.label }}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-floating mb-3 mb-md-0">
+                            {{ form.prix_vente(class="form-control") }}
+                            {{ form.prix_vente.label }}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            {{ form.tva(class="form-control") }}
+                            {{ form.tva.label }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3 mb-md-0">
+                            {{ form.fournisseur_id(class="form-select") }}
+                            {{ form.fournisseur_id.label }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-check mb-3">
+                    {{ form.remboursable(class="form-check-input") }}
+                    {{ form.remboursable.label(class="form-check-label") }}
+                </div>
+
+                <div class="d-flex justify-content-between mt-4 mb-0">
+                    <a href="{{ url_for('views.modifier_medicament') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Annuler
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> {{ 'Modifier' if medicament else 'Enregistrer' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-file-invoice-dollar me-2"></i>Nouvelle Proforma</h2>
+        <a href="{{ url_for('views.get_panier_proforma') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Retour
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Colonne Formulaire -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informations Proforma</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('views.afficher_panier_proforma') }}">
+                        {{ form.hidden_tag() }}
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.reference.label(class="form-label") }}
+                                    {{ form.reference(class="form-control", readonly=True) }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.date_validite.label(class="form-label") }}
+                                    {{ form.date_validite(class="form-control datepicker") }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            {{ form.client.label(class="form-label") }}
+                            {{ form.client(class="form-control") }}
+                            <small class="form-text text-muted">Nom complet du client</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-1"></i> Enregistrer la Proforma
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Section Recherche Produits -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-search me-2"></i>Ajouter des Produits</h5>
+                </div>
+                <div class="card-body">
+                    <div class="input-group mb-3">
+                        <form method="GET" action="{{ url_for('views.get_panier_proforma') }}" class="mb-4">
+                            <div class="input-group">
+                                <input type="text" name="search" class="form-control"
+                                    placeholder="Rechercher un médicament..." value="{{ search_term }}">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search"></i> Rechercher
+                                </button>
+                                {% if search_term %}
+                                <a href="{{ url_for('views.gestion_proformas') }}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times"></i> Effacer
+                                </a>
+                                {% endif %}
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="row">
+                        {% for medicament in medicaments %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ medicament.nom_commercial }}</h6>
+                                    <p class="card-text text-muted small">
+                                        {{ medicament.code_cip }}<br>
+                                        Stock: {{ medicament.stock_actuel }} | Prix: {{
+                                        medicament.prix_vente|format_currency }} Fc
+                                    </p>
+                                </div>
+                                <div class="card-footer bg-transparent">
+                                    <form method="POST" action="{{ url_for('views.ajouter_produit_proforma') }}"
+                                        enctype="application/x-www-form-urlencoded">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="medicament_id" value="{{ medicament.id }}">
+                                        <div class="input-group">
+                                            <input type="number" name="quantite" class="form-control" value="1" min="1"
+                                                max="{{ medicament.stock_actuel }}">
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-cart-plus"></i> Ajouter
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="col-12">
+                            <div class="alert alert-info">Aucun médicament trouvé</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+
+        <!-- Colonne Panier -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm sticky-top" style="top: 20px;">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-shopping-cart me-2"></i>
+                        Panier Proforma
+                        <span class="badge bg-primary rounded-pill panier-count">
+                            {{ session.get('panier_proforma', [])|length }}
+                        </span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Produit</th>
+                                    <th class="text-end">Qté</th>
+                                    <th class="text-end">Total</th>
+                                    <th class="text-end">--</th>
+                                </tr>
+                            </thead>
+                            <tbody id="panier-items">
+                                {% for item in session.get('panier_proforma', []) %}
+                                <tr>
+                                    <td>{{ item.nom }}</td>
+                                    <td class="text-end">{{ item.quantite }}</td>
+                                    <td class="text-end">{{ (item.prix * item.quantite)|format_currency }} Fc</td>
+                                    <td class="text-end">
+                                        <form
+                                            action="{{ url_for('views.supprimer_produit_proforma', medicament_id=item.medicament_id) }}"
+                                            method="POST" style="display: inline;">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                title="Supprimer">
+                                                <i class="fas fa-trash">sup</i>
+                                            </button>
+                                        </form>
+                                    </td>
+
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted">Panier vide</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-active">
+                                    <th>Total</th>
+                                    <th class="text-end" id="total-quantite">
+                                        {{ session.get('panier_proforma', [])|sum(attribute='quantite') }}
+                                    </th>
+                                    <th class="text-end" id="total-montant">
+                                        {% set total = session.get('panier_proforma', [])|sum(attribute='prix') *
+                                        session.get('panier_proforma', [])|sum(attribute='quantite')|default(0)|round(2)
+                                        %}
+                                        {{ "{:,.2f}".format(total).replace(",", "X").replace(".", ",").replace("X", ".")
+                                        }}
+                                    </th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <form action="{{url_for('views.vider_panier_proforma')}}" method="post">
+                        <button class="btn btn-danger btn-sm w-100" id="vider-panier">
+                            <i class="fas fa-trash-alt me-1"></i> Vider le panier
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Inclure les bibliothèques nécessaires -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+<script>
+    // Gestion de l'ajout au panier
+    document.querySelectorAll('.btn-ajouter-proforma').forEach(btn => {
+        btn.addEventListener('click', async function () {
+            const card = this.closest('.medicament-card');
+            const medicamentId = card.dataset.id;
+            const quantite = card.querySelector('.quantite-input').value || 1;
+
+            try {
+                const response = await fetch("{{ url_for('views.ajouter_produit_proforma') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': "{{ csrf_token() }}"
+                    },
+                    body: JSON.stringify({
+                        medicament_id: medicamentId,
+                        quantite: quantite
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Mise à jour de l'interface
+                    document.querySelector('.panier-count').textContent =
+                        parseInt(document.querySelector('.panier-count').textContent) + 1;
+
+                    // Rafraîchissement partiel du panier
+                    const panierResponse = await fetch("{{ url_for('views.get_panier_proforma') }}");
+                    const panierHtml = await panierResponse.text();
+                    document.querySelector('#panier-items').innerHTML =
+                        panierHtml.match(/<tbody[^>]*>([\s\S]*?)<\/tbody>/)[1];
+
+                    // Notification
+                    Toastify({
+                        text: "Produit ajouté au panier",
+                        duration: 3000,
+                        close: true,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "#4CAF50",
+                    }).showToast();
+                }
+            } catch (error) {
+                console.error("Erreur:", error);
+                Swal.fire("Erreur", "Impossible d'ajouter le produit", "error");
+            }
+        });
+    });
+
+    // Vider le panier
+    document.getElementById('vider-panier').addEventListener('click', async function () {
+        const result = await Swal.fire({
+            title: 'Vider le panier?',
+            text: "Tous les articles seront supprimés",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Oui, vider!'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                const response = await fetch("{{ url_for('views.vider_panier_proforma') }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': "{{ csrf_token() }}"
+                    }
+                });
+
+                if (response.ok) {
+                    location.reload();
+                }
+            } catch (error) {
+                Swal.fire("Erreur", "Impossible de vider le panier", "error");
+            }
+        }
+    });
+
+    // Recherche de médicaments - Version CORRIGÉE
+    document.getElementById('search-medicament').addEventListener('input', function (e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const medicamentCards = document.querySelectorAll('.medicament-card');
+
+        medicamentCards.forEach(card => {
+            const cardTitle = card.querySelector('.card-title');
+            const cardText = card.querySelector('.card-text');
+            const name = cardTitle ? cardTitle.textContent.toLowerCase() : '';
+            const cip = cardText ? cardText.textContent.toLowerCase() : '';
+
+            if (name.includes(searchTerm) || cip.includes(searchTerm)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+</script>
+
+<style>
+    .medicament-card {
+        transition: all 0.3s ease;
+    }
+
+    .medicament-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .sticky-top {
+        z-index: 1000;
+    }
+</style>
+{% endblock %}

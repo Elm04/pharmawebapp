@@ -1,0 +1,187 @@
+{% extends "admin/base_admin.html" %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Tableau de bord</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item active">Vue d'ensemble</li>
+    </ol>
+    
+    <!-- Cartes de statistiques -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-primary text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="fw-light">Médicaments</h6>
+                            <h2 class="mb-0">{{ stats.medicaments }}</h2>
+                        </div>
+                        <i class="fas fa-pills fa-3x"></i>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" href="{{ url_for('views.gestion_medicaments') }}">Détails</a>
+                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-success text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="fw-light">Ventes aujourd'hui</h6>
+                            <h2 class="mb-0">{{ stats.ventes_jour }}</h2>
+                        </div>
+                        <i class="fas fa-receipt fa-3x"></i>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" href="{#{ url_for('admin.ventes') }#}">Voir toutes</a>
+                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-warning text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="fw-light">Alertes</h6>
+                            <h2 class="mb-0">{{ stats.alertes }}</h2>
+                        </div>
+                        <i class="fas fa-exclamation-triangle fa-3x"></i>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" href="{{ url_for('views.alertes') }}">Voir</a>
+                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-danger text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="fw-light">Stocks bas</h6>
+                            <h2 class="mb-0">{{ stats.stocks_bas }}</h2>
+                        </div>
+                        <i class="fas fa-box-open fa-3x"></i>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" href="{{ url_for('views.alertes') }}">Réapprovisionner</a>
+                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Graphiques et tableaux -->
+    <div class="row">
+        <div class="col-xl-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-chart-area me-1"></i>
+                    Ventes des 7 derniers jours
+                </div>
+                <div class="card-body"><canvas id="ventesChart" width="100%" height="300"></canvas></div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-chart-bar me-1"></i>
+                    Médicaments les plus vendus
+                </div>
+                <div class="card-body"><canvas id="topMedicamentsChart" width="100%" height="300"></canvas></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Dernières ventes -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-table me-1"></i>
+            Dernières transactions
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>N° Ticket</th>
+                            <th>Date</th>
+                            <th>Montant</th>
+                            <th>Caissier</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vente in dernieres_ventes %}
+                        <tr>
+                            <td>{{ vente.numero_ticket }}</td>
+                            <td>{{ vente.date_vente.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>{{ "%.2f"|format(vente.montant_total) }} Fc</td>
+                            <td>{{ vente.caissier.prenom }}</td>
+                            <td>
+                                <a href="{#{ url_for('admin.voir_vente', id=vente.id) }#}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Graphique des ventes
+    const ventesCtx = document.getElementById('ventesChart').getContext('2d');
+    const ventesChart = new Chart(ventesCtx, {
+        type: 'line',
+        data: {
+            labels: {{ dates_7jours|tojson|safe }},
+            datasets: [{
+                label: 'Montant des ventes (€)',
+                data: {{ montants_7jours|tojson|safe }},
+                backgroundColor: 'rgba(13, 110, 253, 0.2)',
+                borderColor: 'rgba(13, 110, 253, 1)',
+                tension: 0.3
+            }]
+        }
+    });
+
+    // Graphique des médicaments
+    const medsCtx = document.getElementById('topMedicamentsChart').getContext('2d');
+    const medsChart = new Chart(medsCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ top_medicaments_noms|tojson|safe }},
+            datasets: [{
+                label: 'Quantités vendues',
+                data: {{ top_medicaments_qtes|tojson|safe }},
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.7)',
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 206, 86, 0.7)',
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(153, 102, 255, 0.7)'
+                ]
+            }]
+        }
+    });
+</script>
+{% endblock %}

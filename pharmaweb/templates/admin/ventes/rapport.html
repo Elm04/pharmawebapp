@@ -1,0 +1,100 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block content %}
+<h2>Rapport des Ventes</h2>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="fas fa-filter me-1"></i>
+        Paramètres du rapport
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="date_debut" class="form-label">Date début</label>
+                <input type="date" class="form-control" id="date_debut" name="date_debut" value="{{ date_debut }}">
+            </div>
+            <div class="col-md-3">
+                <label for="date_fin" class="form-label">Date fin</label>
+                <input type="date" class="form-control" id="date_fin" name="date_fin" value="{{ date_fin }}">
+            </div>
+            <div class="col-md-3">
+                <label for="group_by" class="form-label">Grouper par</label>
+                <select class="form-select" id="group_by" name="group_by">
+                    <option value="jour" {% if group_by == 'jour' %}selected{% endif %}>Jour</option>
+                    <option value="caissier" {% if group_by == 'caissier' %}selected{% endif %}>Caissier</option>
+                    <option value="medicament" {% if group_by == 'medicament' %}selected{% endif %}>Médicament</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary">Générer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="fas fa-chart-bar me-1"></i>
+        Graphique
+    </div>
+    <div class="card-body">
+        <canvas id="ventesChart" width="100%" height="30"></canvas>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-table me-1"></i>
+        Données
+    </div>
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>{{ 'Date' if group_by == 'jour' else 'Caissier' if group_by == 'caissier' else 'Médicament' }}</th>
+                    <th>Nombre de ventes</th>
+                    <th>Chiffre d'affaires</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in data %}
+                <tr>
+                    <td>{{ item.periode }}</td>
+                    <td>{{ item.nb_ventes if group_by != 'medicament' else item.quantite }}</td>
+                    <td>{{ "%.2f"|format(item.chiffre_affaire) }} Fc</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('ventesChart').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ labels|tojson }},
+            datasets: [{
+                label: 'Chiffre d\'affaires (€)',
+                data: {{ valeurs|tojson }},
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

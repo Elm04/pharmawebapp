@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-file-invoice me-2"></i>
+            Proforma {{ proforma.reference }}
+        </h2>
+        <a href="{{ url_for('views.nouvelle_proforma') }}" class="btn btn-outline-primary">
+            <i class="fas fa-plus me-1"></i> Nouvelle Proforma
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Détails de la Proforma</h5>
+                <span class="badge bg-light text-dark">
+                    {{ proforma.date_creation.strftime('%d/%m/%Y') }}
+                </span>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            <!-- Informations Client -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5>Client</h5>
+                    <p>{{ proforma.client }}</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <h5>Validité</h5>
+                    <p>Jusqu'au {{ proforma.date_validite.strftime('%d/%m/%Y') }}</p>
+                </div>
+            </div>
+
+            <!-- Liste des Produits -->
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Produit</th>
+                            <th class="text-end">Prix Unitaire</th>
+                            <th class="text-end">Quantité</th>
+                            <th class="text-end">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in proforma.details %}
+                        <tr>
+                            <td>{{ item.produit }}</td>
+                            <td class="text-end">{{ item.prix_unitaire }} Fc</td>
+                            <td class="text-end">{{ item.quantite }}</td>
+                            <td class="text-end">{{ item.prix_unitaire * item.quantite }} Fc</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-active">
+                            <th colspan="3" class="text-end">Total :</th>
+                            <th class="text-end">{{ proforma.montant_total }} Fc</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <div class="card-footer text-end">
+            <a href="{{ url_for('views.gestion_proformas') }}" class="btn btn-secondary me-2">
+                <i class="fas fa-list me-1"></i> Retour à la liste
+            </a>
+            <button onclick="window.print()" class="btn btn-success">
+                <i class="fas fa-print me-1"></i> Imprimer
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

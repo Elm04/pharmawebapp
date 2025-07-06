@@ -1,0 +1,116 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block content %}
+<h2>Gestion des Ventes</h2>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="fas fa-filter me-1"></i>
+        Filtres
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="date" class="form-label">Date</label>
+                <input type="date" class="form-control" id="date" name="date" value="{{ date_selected }}">
+            </div>
+            <div class="col-md-4">
+                <label for="utilisateur_id" class="form-label">Caissier</label>
+                <select class="form-select" id="utilisateur_id" name="utilisateur_id">
+                    <option value="tous">Tous les caissiers</option>
+                    {% for caissier in caissiers %}
+                    <option value="{{ caissier.id }}" {% if utilisateur_selected == caissier.id|string %}selected{% endif %}>
+                        {{ caissier.prenom }} {{ caissier.nom }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary">Filtrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <i class="fas fa-chart-bar me-1"></i>
+        Statistiques
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card text-white bg-primary mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ stats.total_ventes }}</h5>
+                        <p class="card-text">Ventes</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-success mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ "%.2f"|format(stats.chiffre_affaire) }} Fc</h5>
+                        <p class="card-text">Chiffre d'affaires</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-info mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ "%.2f"|format(stats.moyenne_vente) }} Fc</h5>
+                        <p class="card-text">Moyenne par vente</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-table me-1"></i>
+        Liste des Ventes
+    </div>
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>N° Ticket</th>
+                    <th>Date</th>
+                    <th>Caissier</th>
+                    <th>Client</th>
+                    <th>Montant</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for vente in ventes %}
+                <tr>
+                    <td>{{ vente.numero_ticket }}</td>
+                    <td>{{ vente.date_vente.strftime('%d/%m/%Y %H:%M') }}</td>
+                    <td>{{ vente.caissier.prenom }} {{ vente.caissier.nom }}</td>
+                    <td>
+                        {% if vente.client %}
+                            {{ vente.client.prenom }} {{ vente.client.nom }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>{{ vente.montant_total|format_currency }} Fc</td>
+                    <td>
+                        <a href="{{ url_for('views.detail_vente', vente_id=vente.id) }}" class="btn btn-sm btn-info">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center">Aucune vente trouvée</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

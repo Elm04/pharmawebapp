@@ -10,6 +10,7 @@ class Config:
     UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads')
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max upload size
     
+    
     # Paramètres pour les rôles
     ROLES = {
         'admin': 'Administrateur',
@@ -17,3 +18,9 @@ class Config:
         'caissier': 'Caissier',
         'preparateur': 'Préparateur'
     }
+    
+    # Configuration pour les uploads
+    UPLOAD_FOLDER = 'static/uploads/medicaments'
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+    # Ajoutez cette configuration
+    NOM_PHARMACIE = "Ma Pharmacie"

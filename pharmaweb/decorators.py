@@ -16,6 +16,6 @@ def caissier_required(f):
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated or current_user.role not in ['caissier', 'pharmacien']:
             flash('Accès réservé au personnel autorisé', 'danger')
-            return redirect(url_for('main.index'))
+            return redirect(url_for('views.index'))
         return f(*args, **kwargs)
     return decorated_function

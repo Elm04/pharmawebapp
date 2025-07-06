@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+<!-- En tête -->
+{% block scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="{{ url_for('static', filename='js/proformas.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4>Nouvelle Proforma</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.reference.label(class="form-label") }}
+                                {{ form.reference(class="form-control", readonly=True) }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.date_validite.label(class="form-label") }}
+                                {{ form.date_validite(class="form-control") }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.client.label(class="form-label") }}
+                            {{ form.client(class="form-control") }}
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Enregistrer
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            {% include 'proformas/_panier.html' %}
+        </div>
+    </div>
+</div>
+{% endblock %}

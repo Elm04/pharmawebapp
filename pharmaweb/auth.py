@@ -17,31 +17,38 @@ def load_user(user_id):
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        user = Utilisateur.query.filter_by(login=form.username.data).first()  # Recherche par le champ login
-        
-        # Vérification de l'utilisateur et du mot de passe
-        if user is None or not user.verify_password(form.password.data):
-            flash('Nom d\'utilisateur ou mot de passe invalide', 'danger')
-            return redirect(url_for('auth.login'))
-        
-        # Vérification si le compte est actif
-        if not user.actif:
-            flash('Ce compte est désactivé', 'warning')
-            return redirect(url_for('auth.login'))
-        
-        # Connexion de l'utilisateur
-        login_user(user, remember=form.remember.data)
-        
-        # Redirection selon le rôle
-        next_page = request.args.get('next')
-        if not next_page:
-            if user.role == 'admin':
-                next_page = url_for('admin.dashboard')
-            else:
-                next_page = url_for('ventes.dashboard')
-        
-        flash('Connexion réussie!', 'success')
-        return redirect(next_page)
+        try:
+            user = Utilisateur.query.filter_by(login=form.username.data).first()
+            
+            # Debug: Afficher les valeurs comparées
+            print(f"Tentative de connexion: {form.username.data}")
+            print(f"Utilisateur trouvé: {user}")
+            if user:
+                print(f"Hash stocké: {user.password}")
+                from werkzeug.security import check_password_hash
+                print(f"Mot de passe testé: {form.password.data}")
+                print(f"Résultat vérification: {check_password_hash(user.password, form.password.data)}")
+            
+            if not user:
+                flash('Identifiant incorrect', 'danger')
+                return redirect(url_for('auth.login'))
+            
+            if not check_password_hash(user.password, form.password.data):
+                flash('Mot de passe incorrect', 'danger')
+                return redirect(url_for('auth.login'))
+            
+            if not user.actif:
+                flash('Compte désactivé', 'warning')
+                return redirect(url_for('auth.login'))
+            
+            login_user(user, remember=form.remember.data)
+            flash(f'Connexion réussie! Bienvenue {user.prenom}', 'success')
+            
+            return redirect(url_for('views.admin_dashboard' if user.role == 'admin' else 'views.ventes_dashboard'))
+            
+        except Exception as e:
+            print(f"ERREUR CONNEXION: {str(e)}")
+            flash('Erreur technique lors de la connexion', 'danger')
     
     return render_template('auth/login.html', form=form)
 
@@ -49,4 +56,4 @@ def login():
 def logout():
     logout_user()
     flash('Vous avez été déconnecté avec succès.', 'info')
-    return redirect(url_for('main.index'))
+    return redirect(url_for('views.index'))

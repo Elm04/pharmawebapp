@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <!-- En-tête Pharmacie -->
+    <div class="text-center mb-4">
+        {% if pharmacie.logo %}
+        <img src="{{ pharmacie.logo }}" alt="Logo Pharmacie" style="max-height: 80px;" class="mb-2">
+        {% endif %}
+        <h2>{{ pharmacie.nom }}</h2>
+        <p class="mb-1">{{ pharmacie.adresse }}</p>
+        <p>Tél: {{ pharmacie.telephone }} | Email: {{ pharmacie.email }}</p>
+        <h4 class="mt-3">Proforma</h4>
+    </div>
+
+    <!-- Détails du panier -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Produit</th>
+                            <th class="text-end">Prix Unitaire</th>
+                            <th class="text-end">Quantité</th>
+                            <th class="text-end">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <td>{{ item.nom }}</td>
+                            <td class="text-end">{{ item.prix|format_currency }} Fc</td>
+                            <td class="text-end">{{ item.quantite }}</td>
+                            <td class="text-end">{{ (item.prix * item.quantite)|format_currency }} Fc</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">Panier vide</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-active">
+                            <th colspan="3" class="text-end">Total Général</th>
+                            <th class="text-end">{{ total|format_currency }} Fc</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pied de page -->
+    <div class="mt-4 text-center text-muted small">
+        <p>Proforma générée le {{ now|format_datetime }} par {{ current_user.nom }}</p>
+    </div>
+</div>
+{% endblock %}

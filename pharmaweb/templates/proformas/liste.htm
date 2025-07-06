@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-file-invoice-dollar me-2"></i>Liste des Proformas</h2>
+        <a href="{{ url_for('views.nouvelle_proforma') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i> Nouvelle Proforma
+        </a>
+    </div>
+
+    <!-- Barre de recherche -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('views.liste_proformas') }}">
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control" 
+                           placeholder="Rechercher par référence ou client..." value="{{ search_term }}">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Rechercher
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tableau des proformas -->
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Référence</th>
+                        <th>Client</th>
+                        <th class="text-end">Montant</th>
+                        <th>Date</th>
+                        <th>Créateur</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for proforma in proformas.items %}
+                    <tr>
+                        <td>{{ proforma.reference }}</td>
+                        <td>{{ proforma.client.nom_complet }}</td>
+                        <td class="text-end">{{ proforma.montant_total|format_currency }} Fc</td>
+                        <td>{{ proforma.date_creation|format_datetime }}</td>
+                        <td>{{ proforma.createur.nom }}</td>
+                        <td class="text-end">
+                            <div class="btn-group">
+                                <a href="{{ url_for('views.visualiser_proforma', id=proforma.id) }}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i> Voir
+                                </a>
+                                <a href="{{ url_for('views.generer_pdf_proforma', id=proforma.id) }}" 
+                                   class="btn btn-sm btn-outline-danger" target="_blank">
+                                    <i class="fas fa-file-pdf"></i> PDF
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">Aucune proforma trouvée</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if proformas.pages > 1 %}
+        <div class="card-footer">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center mb-0">
+                    {% if proformas.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('views.liste_proformas', page=proformas.prev_num, search=search_term) }}">
+                            &laquo;
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for page_num in proformas.iter_pages() %}
+                    <li class="page-item {% if page_num == proformas.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('views.liste_proformas', page=page_num, search=search_term) }}">
+                            {{ page_num }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                    
+                    {% if proformas.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('views.liste_proformas', page=proformas.next_num, search=search_term) }}">
+                            &raquo;
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
