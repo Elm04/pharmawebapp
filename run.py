@@ -1,7 +1,6 @@
-from pharmaweb import mainapp
-from pharmaweb.models import db
+from pharmaweb import create_app
 
-app = mainapp()
+app = create_app()
 
 if __name__ == "__main__":
     app.run()
