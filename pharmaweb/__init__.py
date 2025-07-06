@@ -59,11 +59,11 @@ def configure_template_filters(app):
 
 def register_blueprints(app):
     """Enregistre les blueprints"""
-    from .auth import auth_bp
-    from .views import views_bp
+    from .auth import auth
+    from .views import views
     
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(views_bp)
+    app.register_blueprint(auth)
+    app.register_blueprint(views)
 
 def initialize_database(app):
     """Initialise la base de données"""
