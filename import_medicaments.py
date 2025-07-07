@@ -1,10 +1,10 @@
 import pandas as pd
 import re
 import random
-from pharmaweb import mainapp
+from pharmaweb import create_app
 from pharmaweb.models import db, Medicament
 
-app = mainapp()
+app = create_app()
 
 # Définir CATEGORIES_MEDICAMENTS
 CATEGORIES_MEDICAMENTS = [

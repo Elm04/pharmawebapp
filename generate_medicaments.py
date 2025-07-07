@@ -123,7 +123,7 @@ def generate_medicaments():
 
 if __name__ == "__main__":
     # Assurez-vous que votre application Flask est initialisée correctement
-    from pharmaweb import mainapp
-    app = mainapp()
+    from pharmaweb import create_app
+    app = create_app()
     with app.app_context():
         generate_medicaments()

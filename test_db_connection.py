@@ -1,10 +1,10 @@
 import os
-from pharmaweb import mainapp
+from pharmaweb import create_app
 from pharmaweb.models import db
 from sqlalchemy import inspect
 
 # Chargez l'application
-app = mainapp()
+app = create_app()
 
 with app.app_context():
     try:
