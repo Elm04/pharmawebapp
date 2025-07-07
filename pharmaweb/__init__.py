@@ -6,7 +6,7 @@ from .models import Utilisateur, ParametrePharmacie
 from .filters import format_currency
 from datetime import datetime
 
-def create_app(config_class='config.Config'):
+def mainapp(config_class='config.Config'):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
