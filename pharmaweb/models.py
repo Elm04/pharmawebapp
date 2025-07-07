@@ -81,7 +81,7 @@ class Medicament(db.Model):
     dci = db.Column(db.String(100), nullable=False)
     forme_galenique = db.Column(db.String(50))
     dosage = db.Column(db.String(50))
-    categorie = db.Column(db.String(100), nullable=False)
+    categorie = db.Column(db.String(100), nullable=True)
     stock_actuel = db.Column(db.Integer, default=0)
     stock_minimum = db.Column(db.Integer, default=10)
     prix_achat = db.Column(db.Numeric(10, 2))
