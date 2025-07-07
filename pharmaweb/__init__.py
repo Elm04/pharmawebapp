@@ -25,11 +25,11 @@ def create_app(config_class='config.Config'):
     login_manager.login_message = 'Veuillez vous connecter'
 
     # Import tardif des blueprints
-    from .auth import auth_bp
-    from .views import views_bp
+    from .auth import auth
+    from .views import views
     
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(views_bp)
+    app.register_blueprint(auth)
+    app.register_blueprint(views)
 
     # Initialisation DB
     with app.app_context():
