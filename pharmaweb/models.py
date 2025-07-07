@@ -70,7 +70,6 @@ class Fournisseur(db.Model):
     
     # Relations
     commandes = db.relationship('Commande', back_populates='fournisseur', lazy=True)
-    medicaments = db.relationship('Medicament', back_populates='fournisseur', lazy=True)
 
 class Medicament(db.Model):
     __tablename__ = 'medicaments'
@@ -81,20 +80,18 @@ class Medicament(db.Model):
     dci = db.Column(db.String(100), nullable=False)
     forme_galenique = db.Column(db.String(50))
     dosage = db.Column(db.String(50))
-    categorie = db.Column(db.String(100), nullable=True)
+    categorie = db.Column(db.String(100), nullable=True)  # Champ texte libre (plus de relation)
     stock_actuel = db.Column(db.Integer, default=0)
     stock_minimum = db.Column(db.Integer, default=10)
     prix_achat = db.Column(db.Numeric(10, 2))
     prix_vente = db.Column(db.Numeric(10, 2))
-    tva = db.Column(db.Float, default=0.0)  # Valeur par défaut 0
+    tva = db.Column(db.Float, default=0.0)
     remboursable = db.Column(db.Boolean, default=False)
     conditionnement = db.Column(db.String(50))
     date_peremption = db.Column(db.Date)
-    fournisseur_id = db.Column(db.Integer, db.ForeignKey('fournisseurs.id'))
+    fournisseur_id =db.Column(db.String(100), nullable=True)
 
-    
-    # Relations
-    fournisseur = db.relationship('Fournisseur', back_populates='medicaments')
+    # Relations (supprimer celles liées au fournisseur)
     lignes_ordonnance = db.relationship('LigneOrdonnance', back_populates='medicament', cascade='all, delete-orphan')
     lignes_vente = db.relationship('LigneVente', back_populates='medicament', cascade='all, delete-orphan')
     mouvements_stock = db.relationship('MouvementStock', back_populates='medicament', cascade='all, delete-orphan')

@@ -4,9 +4,9 @@
 /instance/
 
 # Fichiers de base de données SQLite
-*.db
-*.sqlite
-/instance/pharma.db
+# *.db
+# *.sqlite
+# /instance/pharma.db
 
 # Fichiers Python temporaires
 __pycache__/

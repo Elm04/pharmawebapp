@@ -74,7 +74,7 @@ def mainapp(config_class=Config):
 def initialize_database():
     """Initialise la base de données avec des valeurs par défaut"""
     from .models import ParametrePharmacie, Utilisateur
-    
+    db.drop_all()
     db.create_all()
     
     if not ParametrePharmacie.query.first():
