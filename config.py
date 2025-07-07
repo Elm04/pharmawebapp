@@ -1,28 +1,22 @@
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 
 load_dotenv()
 
+BASE_DIR = Path(__file__).parent.parent
+INSTANCE_DIR = BASE_DIR / 'instance'
+INSTANCE_DIR.mkdir(exist_ok=True)  # Crée le dossier si inexistant
+
 class Config:
-    SECRET_KEY = os.getenv('SECRET_KEY') or 'une-cle-secrete-tres-secure'
+    SECRET_KEY = os.getenv('SECRET_KEY', 'default-secret-key')
     
-    # Configuration pour PostgreSQL
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL') or \
-        'postgresql://username:password@localhost:5432/pharma_db'
+    # Chemin absolu pour SQLite
+    SQLALCHEMY_DATABASE_URI = f"sqlite:///{INSTANCE_DIR / 'pharma.db'}"
     
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads')
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max upload size
-    
-    # Paramètres pour les rôles
-    ROLES = {
-        'admin': 'Administrateur',
-        'pharmacien': 'Pharmacien',
-        'caissier': 'Caissier',
-        'preparateur': 'Préparateur'
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_pre_ping': True,
+        'connect_args': {'check_same_thread': False}
     }
     
-    # Configuration pour les uploads
-    UPLOAD_FOLDER = 'static/uploads/medicaments'
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-    NOM_PHARMACIE = "Ma Pharmacie"
+    SQLALCHEMY_TRACK_MODIFICATIONS = False

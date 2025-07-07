@@ -1,19 +1,20 @@
 import pandas as pd
 import re
 import random
-from pharmaweb import create_app
+from datetime import datetime
+from pharmaweb import mainapp
 from pharmaweb.models import db, Medicament
 
-app = create_app()
+# Initialisation de l'application Flask
+app = mainapp()
 
-# Définir CATEGORIES_MEDICAMENTS
+# Configuration des catégories
 CATEGORIES_MEDICAMENTS = [
     ('ANTIBIOTIQUES_PENICILLINES', 'Pénicillines'),
     ('ANTIBIOTIQUES_MACROLIDES', 'Macrolides'),
     ('ANALGESIQUES_OPIOIDES', 'Opioïdes'),
     ('CARDIO_ANTIHYPERTENSEURS', 'Antihypertenseurs')
 ]
-
 # Dictionnaire de référence pour la génération des noms
 MEDICAMENTS_REFERENCE = {
     'ANTIBIOTIQUES_PENICILLINES': {

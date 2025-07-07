@@ -1,7 +1,6 @@
 {% extends "admin/base_admin.html" %}
 
 {% block title %}Alertes - PharmaGest{% endblock %}
-
 {% block content %}
 <div class="container-fluid px-4">
     <h1 class="mt-4"><i class="fas fa-exclamation-triangle me-2"></i>Alertes</h1>
@@ -75,7 +74,7 @@
                         <tr class="{% if (medicament.date_expiration - datetime.now()).days <= 7 %}table-danger{% endif %}">
                             <td>{{ medicament.nom_commercial }}</td>
                             <td>{{ medicament.code_cip }}</td>
-                            <td>{{ medicament.date_peremption|format_datetime('%d/%m/%Y') }}</td>
+                            <td>{{ medicament.date_peremption.strftime('%d/%m/%Y') }}</td>
                             <td>{{ (medicament.date_peremption - datetime.now()).days }}</td>
                             <td>{{ medicament.stock_actuel }}</td>
                             <td>

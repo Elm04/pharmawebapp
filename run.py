@@ -1,5 +1,6 @@
-from pharmaweb import create_app
+from pharmaweb import mainapp
 
-print("### EXECTUTION DU TEST DE MON APP###")
-# Crée l'instance Flask en passant la configuration
-main = create_app(config_class='config.Config')  # Adaptez ceci à votre classe de config réelle
+app = mainapp()
+
+if __name__ =="__main__":
+    app.run(debug=True, host="0.0.0.0")

@@ -1,7 +1,7 @@
-from pharmaweb import create_app, db
+from pharmaweb import mainapp, db
 from pharmaweb.models import Utilisateur
 
-app = create_app()
+app = mainapp()
 
 with app.app_context():
     # Importer la fonction d'initialisation
