@@ -5,36 +5,25 @@ load_dotenv()
 
 class Config:
     # Configuration de base
-    SECRET_KEY = os.getenv('SECRET_KEY', 'votre_clé_secrète_complexe_ici')
+    SECRET_KEY = os.getenv('SECRET_KEY')
     
-    # Configuration PostgreSQL
-    POSTGRES_LOCAL = {
-        "host": os.getenv('POSTGRES_HOST', 'localhost'),
-        "database": os.getenv('POSTGRES_DB', 'pharmadatabase'),
-        "user": os.getenv('POSTGRES_USER', 'postgres'),
-        "password": os.getenv('POSTGRES_PASSWORD', 'Elisha10'),
-        "port": os.getenv('POSTGRES_PORT', '5432')
-    }
+    # Configuration PostgreSQL - Version corrigée
+    @staticmethod
+    def get_database_uri():
+        database_url = os.getenv('DATABASE_URL', '')
+        if not database_url:
+            raise ValueError("DATABASE_URL must be set in environment variables")
+        
+        # Correction pour Render
+        if database_url.startswith('postgres://'):
+            database_url = database_url.replace('postgres://', 'postgresql://', 1)
+        
+        return database_url
     
-    # Configuration Render (externe)
-    POSTGRES_RENDER = {
-        "host": "dpg-d1lerhje5dus73fkkk6g-a",
-        "database": "pharmadatabase",
-        "user": "pharmadatabase_user",
-        "password": "WQSRXZWsY2KYpxQAdmqENzqcvRrzpX7K",
-        "port": "5432"  # Port par défaut pour PostgreSQL
-    }
-    
-    # Configuration SQLAlchemy (choix automatique selon l'environnement)
-    @property
-    def SQLALCHEMY_DATABASE_URI(self):
-        if os.getenv('FLASK_ENV') == 'production':
-            return f"postgresql://{self.POSTGRES_RENDER['user']}:{self.POSTGRES_RENDER['password']}@{self.POSTGRES_RENDER['host']}:{self.POSTGRES_RENDER['port']}/{self.POSTGRES_RENDER['database']}"
-        return f"postgresql://{self.POSTGRES_LOCAL['user']}:{self.POSTGRES_LOCAL['password']}@{self.POSTGRES_LOCAL['host']}:{self.POSTGRES_LOCAL['port']}/{self.POSTGRES_LOCAL['database']}"
+    # Doit être une chaîne, pas une propriété
+    SQLALCHEMY_DATABASE_URI = get_database_uri.__func__()  # Appel immédiat
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    
-    # Options du moteur
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_pre_ping': True,
         'pool_size': 5,
@@ -47,18 +36,12 @@ class Config:
     }
 
     @classmethod
-    def check_db_connection(cls, render=False):
+    def check_db_connection(cls):
         """Vérifie la connexion à la base de données"""
         try:
             import psycopg2
-            config = cls.POSTGRES_RENDER if render else cls.POSTGRES_LOCAL
-            conn = psycopg2.connect(**config)
+            conn = psycopg2.connect(cls.SQLALCHEMY_DATABASE_URI, connect_timeout=5)
             conn.close()
-            return True, f"Connexion {'Render' if render else 'locale'} réussie"
+            return True, "Connexion réussie"
         except Exception as e:
-            return False, f"Erreur de connexion {'Render' if render else 'locale'}: {str(e)}"
-
-    @classmethod
-    def get_db_config(cls, render=False):
-        """Retourne la configuration DB pour les scripts psycopg2"""
-        return cls.POSTGRES_RENDER if render else cls.POSTGRES_LOCAL
+            return False, f"Erreur de connexion: {str(e)}"
