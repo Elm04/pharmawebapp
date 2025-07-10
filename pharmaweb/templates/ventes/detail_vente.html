@@ -2,109 +2,117 @@
 
 {% block ventes_content %}
 <div class="container">
-    <div class="card shadow-sm printable-area">
+    <!-- En-tête de la pharmacie -->
+    <div class="text-center mb-4">
+        {% if ticket.pharmacie.logo %}
+        <img src="{{ ticket.pharmacie.logo }}" alt="Logo pharmacie" style="max-height: 80px;" class="mb-3">
+        {% endif %}
+        <h2>{{ ticket.pharmacie.nom }}</h2>
+        <p class="mb-1">{{ ticket.pharmacie.adresse }}</p>
+        <p class="mb-1">
+            Tél: {{ ticket.pharmacie.telephone }}
+            {% if ticket.pharmacie.telephone2 %} / {{ ticket.pharmacie.telephone2 }}{% endif %}
+        </p>
+        {% if ticket.pharmacie.email %}
+        <p class="mb-1">Email: {{ ticket.pharmacie.email }}</p>
+        {% endif %}
+        {% if ticket.pharmacie.rccm %}
+        <p class="mb-1 small">RCCM: {{ ticket.pharmacie.rccm }}</p>
+        {% endif %}
+        {% if ticket.pharmacie.ordre_pharmaciens %}
+        <p class="mb-1 small">Ordre Pharmaciens: {{ ticket.pharmacie.ordre_pharmaciens }}</p>
+        {% endif %}
+    </div>
+
+    <!-- Détails du ticket -->
+    <div class="card shadow-sm mb-4">
         <div class="card-header bg-primary text-white">
             <div class="d-flex justify-content-between align-items-center">
-                <h4 class="mb-0">Ticket #{{ ticket.numero }}</h4>
-                <div class="btn-group">
-                    <button onclick="window.print()" class="btn btn-light btn-sm">
-                        <i class="fas fa-print"></i> Imprimer
-                    </button>
-                    <button onclick="exportToPDF()" class="btn btn-light btn-sm">
-                        <i class="fas fa-file-pdf"></i> PDF
-                    </button>
-                </div>
+                <h5 class="mb-0">FACTURE #{{ ticket.numero }}</h5>
+                <span>{{ ticket.date }}</span>
             </div>
         </div>
-
         <div class="card-body">
-            <!-- En-tête -->
-            <div class="text-center mb-4">
-                <h5>Pharmacie XYZ</h5>
-                <p class="text-muted">{{ ticket.date }}</p>
-                <p>Caissier: {{ ticket.caissier }}</p>
-                {% if ticket.patient != "Non renseigné" %}
-                <p>Patient: {{ ticket.patient }}</p>
-                {% endif %}
+            <!-- Infos client/caissier -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <p><strong>CLIENT:</strong> {{ ticket.patient }}</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p><strong>CAISSIER:</strong> {{ ticket.caissier }}</p>
+                </div>
             </div>
 
-            <!-- Articles -->
-            <table class="table table-sm">
-                <thead>
-                    <tr>
-                        <th>Produit</th>
-                        <th class="text-end">Qté</th>
-                        <th class="text-end">Prix unitaire</th>
-                        <th class="text-end">Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in ticket.get('items', []) if item is mapping %}
-                    <tr>
-                        <td>{{ item.get('nom', 'N/A') }}</td>
-                        <td class="text-end">{{ item.get('quantite', 0) }}</td>
-                        <td class="text-end">{{ "%.2f"|format(item.get('prix', 0)) }} Fc</td>
-                        <td class="text-end">{{ "%.2f"|format(item.get('prix', 0) * item.get('quantite', 0)) }} Fc</td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="4" class="text-center text-warning">
-                            {% if not ticket.get('items') %}
-                            Aucun article dans cette transaction
-                            {% else %}
-                            Format des articles invalide
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-
-            <!-- Totaux -->
-            <div class="row mt-4">
-                <div class="col-md-6 offset-md-6">
-                    <div class="d-flex justify-content-between border-top pt-2">
-                        <strong>Total:</strong>
-                        <strong>{{ "%.2f"|format(ticket.total) }} Fc</strong>
-                    </div>
-
-                    <div class="d-flex justify-content-between">
-                        <span>Montant réglé:</span>
-                        <span>{{ "%.2f"|format(ticket.montant_regle) }} Fc</span>
-                    </div>
-
-                    <div class="d-flex justify-content-between">
-                        <span>Monnaie rendue:</span>
-                        <span>{{ "%.2f"|format(ticket.monnaie) }} Fc</span>
-                    </div>
-                </div>
+            <!-- Liste des articles -->
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>CODE CIP</th>
+                            <th>DÉSIGNATION</th>
+                            <th class="text-end">P.U (Fc)</th>
+                            <th class="text-center">QTÉ</th>
+                            <th class="text-end">TOTAL (Fc)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if ticket.lignes_vente %}
+                        {% for item in ticket.lignes_vente %}
+                        <tr>
+                            <td>{{ item.cip }}</td>
+                            <td>{{ item.nom }}</td>
+                            <td class="text-end">{{ "%.2f"|format(item.prix) }}</td>
+                            <td class="text-center">{{ item.quantite }}</td>
+                            <td class="text-end">{{ "%.2f"|format(item.total) }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center">Aucun article dans cette vente</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <th colspan="4" class="text-end">TOTAL</th>
+                            <th class="text-end">{{ "%.2f"|format(ticket.total) }}</th>
+                        </tr>
+                        <tr>
+                            <th colspan="4" class="text-end">MONTANT PAYÉ</th>
+                            <th class="text-end">{{ "%.2f"|format(ticket.montant_regle) }}</th>
+                        </tr>
+                        <tr>
+                            <th colspan="4" class="text-end">MONNAIE</th>
+                            <th class="text-end">{{ "%.2f"|format(ticket.monnaie) }}</th>
+                        </tr>
+                    </tfoot>
+                </table>
             </div>
         </div>
     </div>
 
-    <div class="mt-3 text-center">
-        <a href="{{ url_for('views.ventes_dashboard') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Retour au tableau de bord
+    <!-- Mentions légales -->
+    <div class="text-center small text-muted mt-4">
+        {% if ticket.pharmacie.responsable %}
+        <p>Pharmacien responsable: {{ ticket.pharmacie.responsable }}</p>
+        {% endif %}
+        {% if ticket.pharmacie.tva %}
+        <p>TVA: {{ ticket.pharmacie.tva }}</p>
+        {% endif %}
+        <p>Ticket valable comme justificatif de paiement</p>
+        <p>Merci pour votre visite !</p>
+    </div>
+
+    <!-- Bouton d'impression -->
+    <div class="text-center mt-4 no-print">
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="fas fa-print me-2"></i>Imprimer
+        </button>
+        <a href="{{ url_for('views.ventes_dashboard') }}" class="btn btn-secondary ms-2">
+            <i class="fas fa-arrow-left me-2"></i>Retour
         </a>
     </div>
 </div>
-
-<!-- Script pour l'export PDF -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script>
-    function exportToPDF() {
-        const element = document.querySelector('.printable-area');
-        const opt = {
-            margin: 10,
-            filename: 'ticket_{{ ticket.numero }}.pdf',
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        html2pdf().set(opt).from(element).save();
-    }
-</script>
 
 <style>
     @media print {
@@ -112,20 +120,26 @@
             visibility: hidden;
         }
 
-        .printable-area,
-        .printable-area * {
+        .container,
+        .container * {
             visibility: visible;
         }
 
-        .printable-area {
+        .container {
             position: absolute;
             left: 0;
             top: 0;
             width: 100%;
+            padding: 0;
         }
 
-        .btn-group {
+        .no-print {
             display: none !important;
+        }
+
+        .card {
+            border: none;
+            box-shadow: none;
         }
     }
 </style>

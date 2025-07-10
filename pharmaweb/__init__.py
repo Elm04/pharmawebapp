@@ -24,6 +24,8 @@ def mainapp(config_class=Config):
     migrate.init_app(app, db)
     csrf = CSRFProtect(app)
     
+    # Configuration
+    app.config['WTF_CSRF_TIME_LIMIT'] = 3600  # Durée de validité du token
     # Configuration du LoginManager
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Veuillez vous connecter pour accéder à cette page.'
@@ -67,6 +69,9 @@ def mainapp(config_class=Config):
     
     # Initialisation de la base de données
     with app.app_context():
+        success, message = Config.check_db_connection()
+        if not success:
+            print(f"⚠️ ATTENTION: {message}")
         initialize_database()
     
     return app
@@ -74,7 +79,7 @@ def mainapp(config_class=Config):
 def initialize_database():
     """Initialise la base de données avec des valeurs par défaut"""
     from .models import ParametrePharmacie, Utilisateur
-    db.drop_all()
+    # db.drop_all()
     db.create_all()
     
     if not ParametrePharmacie.query.first():

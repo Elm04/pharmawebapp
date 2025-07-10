@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SelectField, DateField, DecimalField, IntegerField, TextAreaField, BooleanField, SubmitField,FileField,validators
 from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError,DataRequired, Optional,NumberRange
-from .models import Utilisateur, Medicament, Patient
+from .models import Utilisateur, Medicament, Patient, Fournisseur
 from flask import request
 
 
@@ -95,88 +95,30 @@ class PatientForm(FlaskForm):
             raise ValidationError('Ce code patient est déjà utilisé.')
 
 class MedicamentForm(FlaskForm):
-    # Champ catégorie dynamique (à remplir dans la vue)
-    categorie = SelectField(
-        'Catégorie',
-        choices=[('', '-- Sélectionnez une catégorie --')] + CATEGORIES_MEDICAMENTS,
-        validators=[DataRequired(message="La catégorie est obligatoire")]
-    )
-    
     code_cip = StringField('Code CIP', validators=[DataRequired()])
-    
-    nom_commercial = StringField(
-        'Nom commercial', 
-        validators=[DataRequired(message="Le nom commercial est obligatoire")]
-    )
-    
-    dci = StringField(
-        'DCI', 
-        validators=[DataRequired(message="La DCI est obligatoire")]
-    )
-    
+    nom_commercial = StringField('Nom commercial', validators=[DataRequired()])
+    dci = StringField('DCI', validators=[DataRequired()])
     forme_galenique = StringField('Forme galénique')
     dosage = StringField('Dosage')
-    
-    stock_actuel = IntegerField(
-        'Stock actuel', 
-        validators=[DataRequired(message="Le stock actuel est obligatoire")]
-    )
-    
-    stock_minimum = IntegerField(
-        'Stock minimum', 
-        validators=[DataRequired(message="Le stock minimum est obligatoire")]
-    )
-    
-    prix_achat = DecimalField(
-        'Prix d\'achat', 
-        places=2, 
-        validators=[Optional()]
-    )
-    
-    prix_vente = DecimalField(
-        'Prix de vente', 
-        places=2, 
-        validators=[Optional()]
-    )
-    
-    tva = DecimalField(
-        'TVA (%)', 
-        places=2, 
-        validators=[Optional()]
-    )
-    
-    remboursable = BooleanField('Remboursable', default=False)
+    categorie = SelectField('Catégorie', choices=CATEGORIES_MEDICAMENTS)
+    stock_actuel = IntegerField('Stock actuel', validators=[DataRequired()])
+    stock_minimum = IntegerField('Stock minimum', validators=[DataRequired()])
+    prix_achat = DecimalField('Prix achat', places=2)
+    prix_vente = DecimalField('Prix vente', places=2)
+    tva = DecimalField('TVA %', places=2, default=0)
+    remboursable = BooleanField('Remboursable')
     conditionnement = StringField('Conditionnement')
-    
-    date_peremption = DateField(
-        'Date de péremption', 
-        format='%Y-%m-%d', 
-        validators=[Optional()]
-    )
-    
-    
-    
-    
-    fournisseur_id = SelectField(
-        'Fournisseur',
-        coerce=lambda x: int(x) if x and x != 'None' else None,
-        validators=[Optional()],
-        choices=[]
-    )
-    
+    date_peremption = DateField('Date péremption', format='%Y-%m-%d')
+    fournisseur_id = SelectField('Fournisseur', 
+                           coerce=lambda x: int(x) if x and x != 'None' and x != '0' else None,
+                           validators=[Optional()])
     submit = SubmitField('Enregistrer')
 
-    def validate_code_cip(self, field):
-        """Validation conditionnelle du code CIP"""
-        # Si c'est une modification (ID dans l'URL), on skip la validation si le CIP n'a pas changé
-        if 'id' in request.view_args:
-            medicament = Medicament.query.get(request.view_args['id'])
-            if medicament and medicament.code_cip == field.data:
-                return
-        
-        # Sinon, on vérifie l'unicité (pour les nouveaux médicaments)
-        if Medicament.query.filter_by(code_cip=field.data).first():
-            raise ValidationError('Ce code CIP existe déjà')
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Initialisation dynamique des fournisseurs
+        self.fournisseur_id.choices = [(f.id, f.nom) for f in Fournisseur.query.order_by('nom')]
+        self.fournisseur_id.choices.insert(0, (0, '-- Aucun --'))
 
 class OrdonnanceForm(FlaskForm):
     numero_ordonnance = StringField('Numéro d\'ordonnance', validators=[DataRequired()])

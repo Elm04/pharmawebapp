@@ -9,41 +9,65 @@
         {% endif %}
         <h2>{{ pharmacie.nom }}</h2>
         <p class="mb-1">{{ pharmacie.adresse }}</p>
-        <p>Tél: {{ pharmacie.telephone }} | Email: {{ pharmacie.email }}</p>
-        <h4 class="mt-3">Proforma</h4>
+        <p class="mb-1">
+            Tél: {{ pharmacie.telephone }}
+            {% if pharmacie.telephone2 %} | {{ pharmacie.telephone2 }}{% endif %}
+            {% if pharmacie.email %} | Email: {{ pharmacie.email }}{% endif %}
+        </p>
+        {% if pharmacie.site_web %}<p class="mb-1">Site: {{ pharmacie.site_web }}</p>{% endif %}
+        {% if pharmacie.rccm or pharmacie.tva %}
+        <p class="small mb-1">
+            {% if pharmacie.rccm %}RCCM: {{ pharmacie.rccm }}{% endif %}
+            {% if pharmacie.tva %} | TVA: {{ pharmacie.tva }}{% endif %}
+        </p>
+        {% endif %}
+        <h4 class="mt-3">PROFORMA N° {{ "%03d"|format(now.timestamp()|int % 1000) }}</h4>
     </div>
 
     <!-- Détails du panier -->
-    <div class="card shadow-sm">
+    <div class="card shadow-sm mb-4">
         <div class="card-body">
+            <!-- Infos client -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <p><strong>Client:</strong> {{ client.nom if client else "Non spécifié" }}</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p><strong>Date:</strong> {{ now|format_datetime }}</p>
+                </div>
+            </div>
+
+            <!-- Tableau des produits -->
             <div class="table-responsive">
                 <table class="table table-bordered">
                     <thead class="table-light">
                         <tr>
-                            <th>Produit</th>
-                            <th class="text-end">Prix Unitaire</th>
-                            <th class="text-end">Quantité</th>
-                            <th class="text-end">Total</th>
+                            <th>Code CIP</th>
+                            <th>Désignation</th>
+                            <th class="text-end">P.U (Fc)</th>
+                            <th class="text-center">Qté</th>
+                            <th class="text-end">Total (Fc)</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for item in items %}
                         <tr>
+                            <td>{{ item.cip if item.cip else "N/A" }}</td>
                             <td>{{ item.nom }}</td>
-                            <td class="text-end">{{ item.prix|format_currency }} Fc</td>
-                            <td class="text-end">{{ item.quantite }}</td>
-                            <td class="text-end">{{ (item.prix * item.quantite)|format_currency }} Fc</td>
+                            <td class="text-end">{{ item.prix|format_currency }}</td>
+                            <td class="text-center">{{ item.quantite }}</td>
+                            <td class="text-end">{{ (item.prix * item.quantite)|format_currency }}</td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="4" class="text-center text-muted">Panier vide</td>
+                            <td colspan="5" class="text-center text-muted">Aucun article dans le panier</td>
                         </tr>
                         {% endfor %}
                     </tbody>
-                    <tfoot>
-                        <tr class="table-active">
-                            <th colspan="3" class="text-end">Total Général</th>
-                            <th class="text-end">{{ total|format_currency }} Fc</th>
+                    <tfoot class="table-light">
+                        <tr>
+                            <th colspan="4" class="text-end">TOTAL</th>
+                            <th class="text-end">{{ total|format_currency }}</th>
                         </tr>
                     </tfoot>
                 </table>
@@ -51,9 +75,45 @@
         </div>
     </div>
 
-    <!-- Pied de page -->
-    <div class="mt-4 text-center text-muted small">
-        <p>Proforma générée le {{ now|format_datetime }} par {{ current_user.nom }}</p>
+    <!-- Mentions légales -->
+    <div class="text-center small text-muted">
+        {% if pharmacie.responsable %}
+        <p>Responsable: {{ pharmacie.responsable }}</p>
+        {% endif %}
+        <p>Proforma valable jusqu'au {{ now.replace(day=now.day+7)|format_datetime('%d/%m/%Y') }}</p>
+        <p>Merci pour votre confiance !</p>
+    </div>
+
+    <!-- Bouton d'impression -->
+    <div class="text-center mt-4 no-print">
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="fas fa-print me-2"></i>Imprimer
+        </button>
     </div>
 </div>
+
+<style>
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        .container, .container * {
+            visibility: visible;
+        }
+        .container {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            padding: 15px;
+        }
+        .no-print {
+            display: none !important;
+        }
+        .card {
+            border: none;
+            box-shadow: none;
+        }
+    }
+</style>
 {% endblock %}

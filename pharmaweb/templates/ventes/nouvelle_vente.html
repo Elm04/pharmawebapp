@@ -43,6 +43,7 @@
                                     <td>{{ med.stock_actuel }}</td>
                                     <td>
                                         <form method="POST" class="d-flex">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                             <input type="hidden" name="medicament_id" value="{{ med.id }}">
                                             <input type="number" name="quantite" value="1" min="1" 
                                                    max="{{ med.stock_actuel }}" class="form-control form-control-sm" style="width: 60px;">
@@ -102,8 +103,7 @@
                     {% endif %}
                     
                     <form method="POST" action="{{ url_for('views.nouvelle_vente') }}">
-                        {{ form.hidden_tag() }}
-                        
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <div class="mb-3">
                             {{ form.patient_id.label(class="form-label") }}
                             {{ form.patient_id(class="form-select") }}

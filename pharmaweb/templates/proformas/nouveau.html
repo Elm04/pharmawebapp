@@ -180,8 +180,9 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <form action="{{url_for('views.vider_panier_proforma')}}" method="post">
-                        <button class="btn btn-danger btn-sm w-100" id="vider-panier">
+                    <form action="{{ url_for('views.vider_panier_proforma') }}" method="post">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                        <button type="submit" class="btn btn-danger btn-sm w-100" id="vider-panier">
                             <i class="fas fa-trash-alt me-1"></i> Vider le panier
                         </button>
                     </form>

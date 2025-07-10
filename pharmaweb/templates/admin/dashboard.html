@@ -6,7 +6,7 @@
     <ol class="breadcrumb mb-4">
         <li class="breadcrumb-item active">Vue d'ensemble</li>
     </ol>
-    
+
     <!-- Cartes de statistiques -->
     <div class="row">
         <div class="col-xl-3 col-md-6">
@@ -21,12 +21,13 @@
                     </div>
                 </div>
                 <div class="card-footer d-flex align-items-center justify-content-between">
-                    <a class="small text-white stretched-link" href="{{ url_for('views.gestion_medicaments') }}">Détails</a>
+                    <a class="small text-white stretched-link"
+                        href="{{ url_for('views.gestion_medicaments') }}">Détails</a>
                     <div class="small text-white"><i class="fas fa-angle-right"></i></div>
                 </div>
             </div>
         </div>
-        
+
         <div class="col-xl-3 col-md-6">
             <div class="card bg-success text-white mb-4">
                 <div class="card-body">
@@ -39,12 +40,12 @@
                     </div>
                 </div>
                 <div class="card-footer d-flex align-items-center justify-content-between">
-                    <a class="small text-white stretched-link" href="{#{ url_for('admin.ventes') }#}">Voir toutes</a>
+                    <a class="small text-white stretched-link" href="{{ url_for('views.gestion_ventes') }}">Voir toutes</a>
                     <div class="small text-white"><i class="fas fa-angle-right"></i></div>
                 </div>
             </div>
         </div>
-        
+
         <div class="col-xl-3 col-md-6">
             <div class="card bg-warning text-white mb-4">
                 <div class="card-body">
@@ -62,7 +63,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-xl-3 col-md-6">
             <div class="card bg-danger text-white mb-4">
                 <div class="card-body">
@@ -75,13 +76,14 @@
                     </div>
                 </div>
                 <div class="card-footer d-flex align-items-center justify-content-between">
-                    <a class="small text-white stretched-link" href="{{ url_for('views.alertes') }}">Réapprovisionner</a>
+                    <a class="small text-white stretched-link"
+                        href="{{ url_for('views.alertes') }}">Réapprovisionner</a>
                     <div class="small text-white"><i class="fas fa-angle-right"></i></div>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <!-- Graphiques et tableaux -->
     <div class="row">
         <div class="col-xl-6">
@@ -90,7 +92,11 @@
                     <i class="fas fa-chart-area me-1"></i>
                     Ventes des 7 derniers jours
                 </div>
-                <div class="card-body"><canvas id="ventesChart" width="100%" height="300"></canvas></div>
+                <div class="card-body">
+                    <div style="height: 250px;"> <!-- Conteneur avec hauteur fixe -->
+                        <canvas id="ventesChart"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="col-xl-6">
@@ -99,11 +105,15 @@
                     <i class="fas fa-chart-bar me-1"></i>
                     Médicaments les plus vendus
                 </div>
-                <div class="card-body"><canvas id="topMedicamentsChart" width="100%" height="300"></canvas></div>
+                <div class="card-body">
+                    <div style="height: 250px;"> <!-- Conteneur avec hauteur fixe -->
+                        <canvas id="topMedicamentsChart"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    
+
     <!-- Dernières ventes -->
     <div class="card mb-4">
         <div class="card-header">
@@ -130,7 +140,8 @@
                             <td>{{ "%.2f"|format(vente.montant_total) }} Fc</td>
                             <td>{{ vente.caissier.prenom }}</td>
                             <td>
-                                <a href="{#{ url_for('admin.voir_vente', id=vente.id) }#}" class="btn btn-sm btn-primary">
+                                <a href="{{ url_for('views.detail_vente', vente_id=vente.id) }}"
+                                    class="btn btn-sm btn-primary">
                                     <i class="fas fa-eye"></i>
                                 </a>
                             </td>
@@ -153,13 +164,13 @@
     const ventesChart = new Chart(ventesCtx, {
         type: 'line',
         data: {
-            labels: {{ dates_7jours|tojson|safe }},
-            datasets: [{
-                label: 'Montant des ventes (€)',
-                data: {{ montants_7jours|tojson|safe }},
-                backgroundColor: 'rgba(13, 110, 253, 0.2)',
-                borderColor: 'rgba(13, 110, 253, 1)',
-                tension: 0.3
+            labels: {{ dates_7jours| tojson | safe }},
+    datasets: [{
+        label: 'Montant des ventes (€)',
+        data: {{ montants_7jours| tojson | safe }},
+        backgroundColor: 'rgba(13, 110, 253, 0.2)',
+        borderColor: 'rgba(13, 110, 253, 1)',
+        tension: 0.3
             }]
         }
     });
@@ -169,17 +180,17 @@
     const medsChart = new Chart(medsCtx, {
         type: 'bar',
         data: {
-            labels: {{ top_medicaments_noms|tojson|safe }},
-            datasets: [{
-                label: 'Quantités vendues',
-                data: {{ top_medicaments_qtes|tojson|safe }},
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.7)',
-                    'rgba(54, 162, 235, 0.7)',
-                    'rgba(255, 206, 86, 0.7)',
-                    'rgba(75, 192, 192, 0.7)',
-                    'rgba(153, 102, 255, 0.7)'
-                ]
+            labels: {{ top_medicaments_noms| tojson | safe }},
+    datasets: [{
+        label: 'Quantités vendues',
+        data: {{ top_medicaments_qtes| tojson | safe }},
+        backgroundColor: [
+        'rgba(255, 99, 132, 0.7)',
+        'rgba(54, 162, 235, 0.7)',
+        'rgba(255, 206, 86, 0.7)',
+        'rgba(75, 192, 192, 0.7)',
+        'rgba(153, 102, 255, 0.7)'
+    ]
             }]
         }
     });

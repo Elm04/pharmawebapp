@@ -8,6 +8,9 @@ from sqlalchemy.orm import joinedload
 from datetime import datetime
 from flask import current_app
 from werkzeug.utils import secure_filename
+from flask_wtf.csrf import generate_csrf
+from sqlalchemy import or_
+
 
 from pharmaweb.models import (Utilisateur, Medicament, Patient, Fournisseur, 
                             ParametrePharmacie, Vente, LigneVente, Proforma)
@@ -285,50 +288,83 @@ def allowed_file(filename):
 @views.route('/admin/medicaments')
 @login_required
 def gestion_medicaments():
-    medicaments = Medicament.query.order_by(Medicament.nom_commercial).all()
-    return render_template('admin/medicaments/liste.html', medicaments=medicaments)
+    page = request.args.get('page', 1, type=int)
+    per_page = 10  # Nombre d'éléments par page
+    search_term = request.args.get('search', '').strip()
+
+    query = Medicament.query.order_by(Medicament.nom_commercial)
+    
+    if search_term:
+        query = query.filter(
+            or_(
+                Medicament.code_cip.ilike(f'%{search_term}%'),
+                Medicament.nom_commercial.ilike(f'%{search_term}%'),
+                Medicament.dci.ilike(f'%{search_term}%')
+            )
+        )
+
+    medicaments = query.paginate(page=page, per_page=per_page, error_out=False)
+    
+    return render_template('admin/medicaments/liste.html', 
+                         medicaments=medicaments,
+                         search_term=search_term)
+
+def get_fournisseurs_choices():
+    """Retourne les options pour le selecteur de fournisseurs"""
+    choices = [(str(f.id), f.nom) for f in Fournisseur.query.order_by('nom')]
+    choices.insert(0, ('None', '-- Aucun fournisseur --'))
+    return choices
 
 @views.route('/admin/medicament/ajouter', methods=['GET', 'POST'])
 @login_required
 def ajouter_medicament():
-    form = MedicamentForm()  # Les choix sont maintenant gérés dans le __init__ du formulaire
+    form = MedicamentForm()
+    form.fournisseur_id.choices = get_fournisseurs_choices()  # Initialisation des fournisseurs
     
     if form.validate_on_submit():
         try:
-            # Construction du médicament
-            medicament_data = {
-                'code_cip': form.code_cip.data,
-                'nom_commercial': form.nom_commercial.data,
-                'dci': form.dci.data,
-                'forme_galenique': form.forme_galenique.data,
-                'dosage': form.dosage.data,
-                'categorie': form.categorie.data,  # Utilise directement la valeur de la liste statique
-                'stock_actuel': form.stock_actuel.data,
-                'stock_minimum': form.stock_minimum.data,
-                'prix_achat': float(form.prix_achat.data) if form.prix_achat.data else None,
-                'prix_vente': float(form.prix_vente.data) if form.prix_vente.data else None,
-                'tva': float(form.tva.data) if form.tva.data else 0,
-                'remboursable': form.remboursable.data,
-                'conditionnement': form.conditionnement.data,
-                'date_peremption': form.date_peremption.data,
-                'fournisseur_id': form.fournisseur_id.data if form.fournisseur_id.data != 'None' else None,
-            }
+            # Création d'un nouveau médicament avec les données du formulaire
+            medicament = Medicament(
+                code_cip=form.code_cip.data,
+                nom_commercial=form.nom_commercial.data,
+                dci=form.dci.data,
+                forme_galenique=form.forme_galenique.data,
+                dosage=form.dosage.data,
+                categorie=form.categorie.data,
+                stock_actuel=form.stock_actuel.data,
+                stock_minimum=form.stock_minimum.data,
+                prix_achat=float(form.prix_achat.data) if form.prix_achat.data else None,
+                prix_vente=float(form.prix_vente.data) if form.prix_vente.data else None,
+                tva=float(form.tva.data) if form.tva.data else 0,
+                remboursable=form.remboursable.data,
+                conditionnement=form.conditionnement.data,
+                date_peremption=form.date_peremption.data,
+                fournisseur_id=int(form.fournisseur_id.data) if form.fournisseur_id.data != 'None' else None
+            )
             
+            # Vérification manuelle de l'unicité du code CIP (double sécurité)
+            if Medicament.query.filter_by(code_cip=form.code_cip.data).first():
+                flash('Ce code CIP existe déjà', 'danger')
+                return render_template('admin/medicaments/ajouter.html', form=form)
             
-            # Création du médicament
-            medicament = Medicament(**medicament_data)
             db.session.add(medicament)
             db.session.commit()
             
             flash('Médicament ajouté avec succès!', 'success')
             return redirect(url_for('views.gestion_medicaments'))
             
+        except ValueError as e:
+            db.session.rollback()
+            flash(f'Erreur de valeur: {str(e)}', 'danger')
+        except IntegrityError:
+            db.session.rollback()
+            flash('Erreur: Ce code CIP existe déjà dans la base', 'danger')
         except Exception as e:
             db.session.rollback()
+            flash(f'Erreur technique lors de l\'ajout: {str(e)}', 'danger')
             current_app.logger.error(f"Erreur ajout médicament: {str(e)}", exc_info=True)
-            flash(f"Erreur technique lors de l'ajout: {str(e)}", 'danger')
     
-    return render_template('admin/medicaments/ajouter.html', form=form)
+    return render_template('admin/medicaments/ajouter.html', form=form, mode_edition=False)
 
 @views.route('/admin/medicament')
 @views.route('/admin/medicament/edit/<int:medicament_id>', methods=['GET', 'POST'])
@@ -336,29 +372,33 @@ def ajouter_medicament():
 def modifier_medicament(medicament_id):
     medicament = Medicament.query.get_or_404(medicament_id)
     form = MedicamentForm(obj=medicament)
-    
-    # Initialisation des choix dynamiques (fournisseurs uniquement)
-    form.fournisseur_id.choices = [(str(f.id), f.nom) for f in Fournisseur.query.order_by('nom')]
-    form.fournisseur_id.choices.insert(0, ('None', '-- Aucun fournisseur --'))
-    
+    form.fournisseur_id.choices = get_fournisseurs_choices()
+
     if form.validate_on_submit():
         try:
-            # Mise à jour directe sans gestion d'image
-            form.populate_obj(medicament)
+            # Gestion spéciale du fournisseur
+            if form.fournisseur_id.data == 'None':
+                medicament.fournisseur_id = None
+            else:
+                medicament.fournisseur_id = form.fournisseur_id.data
+
+            # Copie des autres champs
+            for field in form:
+                if field.name not in ['fournisseur_id', 'csrf_token']:
+                    setattr(medicament, field.name, field.data)
+
             db.session.commit()
-            flash('Modification réussie !', 'success')
+            flash('Modification réussie!', 'success')
             return redirect(url_for('views.gestion_medicaments'))
             
-        except IntegrityError:
-            db.session.rollback()
-            flash('Ce code CIP existe déjà', 'danger')
         except Exception as e:
             db.session.rollback()
-            flash(f'Erreur: {str(e)}', 'danger')
-    
-    return render_template('admin/medicaments/ajouter.html',
-                         form=form,
-                         medicament=medicament)
+            flash(f'Erreur technique: {str(e)}', 'danger')
+
+    return render_template('admin/medicaments/ajouter.html', 
+                         form=form, 
+                         medicament=medicament,
+                         mode_edition=True)
 
 @views.route('/admin/medicament/supprimer/<int:id>')
 @login_required
@@ -386,39 +426,69 @@ def detail_facture(vente_id):
     # Récupération de la vente
     vente = Vente.query.get_or_404(vente_id)
     
-    # Vérification de la date
+    # Vérification de la date (optionnel)
     if vente.date_vente.date() != datetime.today().date():
         flash("Accès restreint aux ventes du jour", 'warning')
         return redirect(url_for('views.ventes_dashboard'))
 
-    # Récupération sécurisée des lignes de vente
+    # Récupération des lignes de vente
     lignes = db.session.query(
         LigneVente,
-        Medicament.nom_commercial
+        Medicament.nom_commercial,
+        Medicament.code_cip
     ).join(
         Medicament, LigneVente.medicament_id == Medicament.id
     ).filter(
         LigneVente.vente_id == vente_id
     ).all()
 
-    # Construction garantie du ticket
-    ticket = {
-        'numero': vente.numero_ticket,
-        'date': vente.date_vente.strftime('%d/%m/%Y %H:%M'),
-        'items': [{
+    # Récupération des paramètres de la pharmacie
+    pharmacie = ParametrePharmacie.query.first()
+    
+    # Construction de l'adresse complète
+    adresse_complete = f"{pharmacie.adresse_rue}, {pharmacie.adresse_ville}"
+    if pharmacie.adresse_code_postal:
+        adresse_complete += f", {pharmacie.adresse_code_postal}"
+    if pharmacie.adresse_pays:
+        adresse_complete += f", {pharmacie.adresse_pays}"
+
+    # Construction des items de la vente
+    items_list = []
+    for ligne, nom, code_cip in lignes:
+        items_list.append({
             'nom': nom,
+            'cip': code_cip,
             'prix': float(ligne.prix_unitaire),
             'quantite': ligne.quantite,
             'total': float(ligne.prix_unitaire * ligne.quantite)
-        } for ligne, nom in lignes],  # Liste en compréhension garantie
+        })
+
+    # Construction du ticket
+    ticket = {
+        'numero': vente.numero_ticket,
+        'date': vente.date_vente.strftime('%d/%m/%Y %H:%M'),
+        'ligne_vente': items_list,
         'total': float(vente.montant_total),
         'montant_regle': float(vente.montant_regle),
         'monnaie': float(vente.montant_regle - vente.montant_total),
         'caissier': f"{vente.caissier.prenom} {vente.caissier.nom}",
-        'patient': f"{vente.client.nom} {vente.client.prenom}" if vente.client else "Non renseigné"
+        'patient': f"{vente.client.nom} {vente.client.prenom}" if vente.client else "Non renseigné",
+        'pharmacie': {
+            'nom': pharmacie.nom_pharmacie,
+            'adresse': adresse_complete,
+            'telephone': pharmacie.telephone_principal,
+            'telephone2': pharmacie.telephone_secondaire,
+            'email': pharmacie.email,
+            'site_web': pharmacie.site_web,
+            'rccm': pharmacie.rccm,
+            'tva': pharmacie.numero_tva,
+            'ordre_pharmaciens': pharmacie.numero_ordre_pharmaciens,
+            'responsable': pharmacie.responsable_legal,
+            'logo': url_for('static', filename=pharmacie.chemin_logo.split('/')[-1]) if pharmacie.inclure_logo and pharmacie.chemin_logo else None
+        }
     }
 
-    return render_template('ventes/detail_vente.html', ticket=ticket)
+    return render_template('ventes/detail_vente.html', ticket=ticket, _items=items_list)
 
 def _rechercher_medicaments(search_term=''):
     """Méthode utilitaire pour rechercher des médicaments en stock"""
@@ -744,19 +814,7 @@ def visualiser_proforma(id):
                          proforma=proforma,
                          search_term=request.args.get('search', ''))
     
-# @views.route('/proforma/<int:id>/pdf')
-# @login_required
-# def generer_pdf_proforma(id):
-#     proforma = Proforma.query.get_or_404(id)
-#     html = render_template('proformas/pdf_template.html', proforma=proforma)
-    
-#     pdf = HTML(string=html).write_pdf()
-    
-#     response = make_response(pdf)
-#     response.headers['Content-Type'] = 'application/pdf'
-#     response.headers['Content-Disposition'] = f'inline; filename=proforma_{proforma.reference}.pdf'
-    
-#     return response
+
 
 @views.route('/proformas/ajouter', methods=['POST'])
 @login_required
@@ -836,15 +894,32 @@ def get_panier_proforma():
     
 @views.route('/panier-proforma', methods=['POST'])
 def afficher_panier_proforma():
-    # Récupérez les infos de la pharmacie (à adapter selon votre modèle)
+    # Récupération des paramètres de la pharmacie
+    pharmacie_db = ParametrePharmacie.query.first()
+    
+    # Construction de l'adresse complète
+    adresse_complete = f"{pharmacie_db.adresse_rue}, {pharmacie_db.adresse_ville}"
+    if pharmacie_db.adresse_code_postal:
+        adresse_complete += f", {pharmacie_db.adresse_code_postal}"
+    if pharmacie_db.adresse_pays:
+        adresse_complete += f", {pharmacie_db.adresse_pays}"
+
+    # Préparation des données de la pharmacie
     pharmacie = {
-        'nom': "PHARMACIE DU CENTRE",  # Remplacez par vos données réelles
-        'adresse': "123 Avenue Principale, Ville",
-        'telephone': "+243 XX XXX XX XX",
-        'email': "contact@pharmacie-du-centre.com",
-        'logo': url_for('static', filename='images/logo-pharmacie.png')
+        'nom': pharmacie_db.nom_pharmacie,
+        'adresse': adresse_complete,
+        'telephone': pharmacie_db.telephone_principal,
+        'telephone2': pharmacie_db.telephone_secondaire,
+        'email': pharmacie_db.email,
+        'site_web': pharmacie_db.site_web,
+        'rccm': pharmacie_db.rccm,
+        'tva': pharmacie_db.numero_tva,
+        'ordre_pharmaciens': pharmacie_db.numero_ordre_pharmaciens,
+        'responsable': pharmacie_db.responsable_legal,
+        'logo': url_for('static', filename=pharmacie_db.chemin_logo.split('/')[-1]) if pharmacie_db.inclure_logo and pharmacie_db.chemin_logo else None
     }
     
+    # Récupération du panier proforma
     panier = session.get('panier_proforma', [])
     total = sum(item['prix'] * item['quantite'] for item in panier)
     
@@ -893,10 +968,12 @@ def nouvelle_vente():
         
         if not _ajouter_au_panier(medicament_id, quantite):
             flash("Erreur lors de l'ajout au panier", 'danger')
+            
         return redirect(url_for('views.nouvelle_vente', recherche=search_term))
 
     # 3. Finalisation de la vente
     if form.validate_on_submit():
+        csrf_token = generate_csrf()
         # Validation initiale
         if not session['panier']:
             flash("Le panier est vide", 'warning')
@@ -958,7 +1035,6 @@ def nouvelle_vente():
             
             # Journalisation réussite
             current_app.logger.info(f"Vente {vente.numero_ticket} créée avec succès")
-            
             return render_template('ventes/ticket.html', ticket=ticket)
             
         except Exception as e:
@@ -966,7 +1042,7 @@ def nouvelle_vente():
             current_app.logger.error(f"Erreur vente : {str(e)}")
             flash(f"Erreur système : {str(e)}", 'danger')
             return redirect(url_for('views.nouvelle_vente'))
-
+    
     # Affichage normal (GET)
     return render_template(
         'ventes/nouvelle_vente.html',
@@ -974,8 +1050,8 @@ def nouvelle_vente():
         medicaments=medicaments,
         search_term=search_term,
         panier=session.get('panier', []),
-        total=session.get('total', 0.0)
-    )
+        total=session.get('total', 0.0),
+        )
     
 
 
