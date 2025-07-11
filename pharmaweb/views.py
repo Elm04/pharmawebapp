@@ -323,27 +323,36 @@ def ajouter_medicament():
     
     if form.validate_on_submit():
         try:
-            # Création d'un nouveau médicament avec les données du formulaire
+            # Gestion sécurisée du fournisseur_id
+            fournisseur_id = None
+            if form.fournisseur_id.data and form.fournisseur_id.data != 'None':
+                try:
+                    fournisseur_id = int(form.fournisseur_id.data)
+                except (ValueError, TypeError):
+                    flash('ID fournisseur invalide', 'danger')
+                    return render_template('admin/medicaments/ajouter.html', form=form)
+
+            # Création d'un nouveau médicament
             medicament = Medicament(
-                code_cip=form.code_cip.data,
-                nom_commercial=form.nom_commercial.data,
-                dci=form.dci.data,
-                forme_galenique=form.forme_galenique.data,
-                dosage=form.dosage.data,
+                code_cip=form.code_cip.data.strip(),  # Nettoyage des espaces
+                nom_commercial=form.nom_commercial.data.strip(),
+                dci=form.dci.data.strip(),
+                forme_galenique=form.forme_galenique.data.strip() if form.forme_galenique.data else None,
+                dosage=form.dosage.data.strip() if form.dosage.data else None,
                 categorie=form.categorie.data,
-                stock_actuel=form.stock_actuel.data,
-                stock_minimum=form.stock_minimum.data,
+                stock_actuel=int(form.stock_actuel.data),
+                stock_minimum=int(form.stock_minimum.data),
                 prix_achat=float(form.prix_achat.data) if form.prix_achat.data else None,
                 prix_vente=float(form.prix_vente.data) if form.prix_vente.data else None,
-                tva=float(form.tva.data) if form.tva.data else 0,
-                remboursable=form.remboursable.data,
-                conditionnement=form.conditionnement.data,
+                tva=float(form.tva.data) if form.tva.data else 0.0,
+                remboursable=bool(form.remboursable.data),
+                conditionnement=form.conditionnement.data.strip() if form.conditionnement.data else None,
                 date_peremption=form.date_peremption.data,
-                fournisseur_id=int(form.fournisseur_id.data) if form.fournisseur_id.data != 'None' else None
+                fournisseur_id=fournisseur_id  # Utilisation de la valeur déjà convertie
             )
-            
-            # Vérification manuelle de l'unicité du code CIP (double sécurité)
-            if Medicament.query.filter_by(code_cip=form.code_cip.data).first():
+
+            # Vérification de l'unicité du code CIP
+            if Medicament.query.filter(Medicament.code_cip.ilike(form.code_cip.data.strip())).first():
                 flash('Ce code CIP existe déjà', 'danger')
                 return render_template('admin/medicaments/ajouter.html', form=form)
             
@@ -355,13 +364,13 @@ def ajouter_medicament():
             
         except ValueError as e:
             db.session.rollback()
-            flash(f'Erreur de valeur: {str(e)}', 'danger')
-        except IntegrityError:
+            flash(f'Erreur de conversion numérique: {str(e)}', 'danger')
+        except IntegrityError as e:
             db.session.rollback()
-            flash('Erreur: Ce code CIP existe déjà dans la base', 'danger')
+            flash(f'Erreur d\'intégrité base de données: {str(e)}', 'danger')
         except Exception as e:
             db.session.rollback()
-            flash(f'Erreur technique lors de l\'ajout: {str(e)}', 'danger')
+            flash(f'Erreur technique: {str(e)}', 'danger')
             current_app.logger.error(f"Erreur ajout médicament: {str(e)}", exc_info=True)
     
     return render_template('admin/medicaments/ajouter.html', form=form, mode_edition=False)
